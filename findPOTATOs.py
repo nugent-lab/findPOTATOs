@@ -15,7 +15,7 @@ from linking_library import *
 
 ########## PARAMETERS ##########
 input_filename='image_triplets_20011120.csv'
-input_directory='../NEAT_reprocessing/output/'
+input_directory='sources/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
 #you don't want this more than ~1/5th of the size of the frame, anything
 #faster is both unlikely and undetectable as it will leave the frame before 
@@ -38,6 +38,7 @@ for m in np.arange(len(image_triplets_list)):
     file_a='o_sources'+image_triplets_list.filea[m]+'.csv'
     file_b='o_sources'+image_triplets_list.fileb[m]+'.csv'
     file_c='o_sources'+image_triplets_list.filec[m]+'.csv'
+    print ("Checking file triplet:",file_a,file_b,file_c)
     #night='2002010102'
     #file_a='o_sources20020101020555c.csv'
     #file_b='o_sources20020101023551c.csv'
@@ -47,12 +48,31 @@ for m in np.arange(len(image_triplets_list)):
     #file_b='o_sources20020104093953c.csv'
     #file_c='o_sources20020104090911c.csv'
 
-    a=pd.read_csv(input_directory+file_a)
-    b=pd.read_csv(input_directory+file_b)
-    c=pd.read_csv(input_directory+file_c)
+    #guess which one is a, b, c, check and then assign a, b, c in order
+    init_a=pd.read_csv(input_directory+file_a)
+    init_b=pd.read_csv(input_directory+file_b)
+    init_c=pd.read_csv(input_directory+file_c)
+    init_a_time=Time(init_a.mjd[0].astype(float), format='mjd', scale='utc')
+    init_b_time=Time(init_b.mjd[0].astype(float), format='mjd', scale='utc')
+    init_c_time=Time(init_c.mjd[0].astype(float), format='mjd', scale='utc')
+
+    #put frames in order
+    order_frames=pd.DataFrame({
+        "names": [file_a, file_b, file_c],
+        "times": [init_a_time, init_b_time, init_c_time]})
+
+    order_frames.sort_values(by=['times'],inplace=True)
+    order_frames.reset_index(inplace=True)
+    #print(order_frames)
+
+    a=pd.read_csv(input_directory+order_frames.names[0])
+    b=pd.read_csv(input_directory+order_frames.names[1])
+    c=pd.read_csv(input_directory+order_frames.names[2])
     a_time=Time(a.mjd[0].astype(float), format='mjd', scale='utc')
     b_time=Time(b.mjd[0].astype(float), format='mjd', scale='utc')
     c_time=Time(c.mjd[0].astype(float), format='mjd', scale='utc')
+    #print("frames,", order_frames.names[0],order_frames.names[1],order_frames.names[2])
+    #print(a_time,b_time,c_time)
 
     # # Remove Stationary Sources
     # The nearest neighbors code (balltree, haversine metric)
@@ -74,7 +94,7 @@ for m in np.arange(len(image_triplets_list)):
     # minimum speed an asteroid can travel to be detected, in arcseconds/second
     # this is calculated based on our astromemtric accuracy and time between frames
     time_interval_s=(b_time-a_time).sec
-    print('time interval',time_interval_s)
+    print('time interval',time_interval_s, 'seconds')
 
     max_dist_rad=np.radians(max_speed*time_interval_s/3600)
     min_dist_rad=np.radians(astrometric_accuracy/3600)
@@ -225,9 +245,6 @@ for m in np.arange(len(image_triplets_list)):
     # so do another screening.
     # this assumes an arbitrary distance to calculate angle. 
     # also screens for magnitude
-    mag_min=np.min([complete_tracklets.mag_a[1],complete_tracklets.mag_b[1],complete_tracklets.mag_c[1]])
-    mag_max=np.max([complete_tracklets.mag_a[1],complete_tracklets.mag_b[1],complete_tracklets.mag_c[1]])
-
     for i in range(len(complete_tracklets)):
         mag_min=np.min([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
         mag_max=np.max([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
@@ -235,6 +252,7 @@ for m in np.arange(len(image_triplets_list)):
             coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
             coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
             coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+            #print("coords", coordA,coordB,coordC)
             lenAB = coordA.separation_3d(coordB)
             lenBC = coordB.separation_3d(coordC)
             lenCA = coordC.separation_3d(coordA)
