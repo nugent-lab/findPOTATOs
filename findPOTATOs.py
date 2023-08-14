@@ -4,22 +4,18 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
-#import matplotlib.pyplot as plt
 from astropy.time import Time
 from sklearn.neighbors import BallTree
 from os.path import exists
 from astropy.coordinates import SkyCoord, Angle, Distance
 from linking_library import *
 
-#import astropy.units as u
-#import os 
-#from subprocess import Popen, PIPE # used to call Find_Orb
-#import re # regular expressions, used to search for mean residuals in Find_orb output files
-#from time import sleep
-
-#  C.R. Nugent and N. Tan, August 2023
+#  C.R. Nugent and N. Tan
+#  August 2023
 
 ########## PARAMETERS ##########
+input_filename='image_triplets_20011120.csv'
+input_directory='../NEAT_reprocessing/output/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
 #you don't want this more than ~1/5th of the size of the frame, anything
 #faster is both unlikely and undetectable as it will leave the frame before 
@@ -33,17 +29,15 @@ Maximum_residual = 0.3 #arcseconds #This is the maximum residual allowed after o
 astrometric_accuracy=3 #arcseconds
 ###############################
 
-input_filename='image_triplets_2002010102.csv'
-input_directory='sources/'
 get_night_id=input_filename.split('.')
 get_night_id=get_night_id[0].split('_')
 night=get_night_id[2]
 image_triplets_list=pd.read_csv(input_filename)
 
 for m in np.arange(len(image_triplets_list)):
-    file_a=image_triplets_list.filea[m]
-    file_b=image_triplets_list.fileb[m]
-    file_c=image_triplets_list.filec[m]
+    file_a='o_sources'+image_triplets_list.filea[m]+'.csv'
+    file_b='o_sources'+image_triplets_list.fileb[m]+'.csv'
+    file_c='o_sources'+image_triplets_list.filec[m]+'.csv'
     #night='2002010102'
     #file_a='o_sources20020101020555c.csv'
     #file_b='o_sources20020101023551c.csv'

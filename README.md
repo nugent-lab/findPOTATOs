@@ -11,6 +11,8 @@
 Congratulations! You are now the happy(?) user of findPOTATOs, an asteroid detection linking software. This is software created by N. Tan and C.R. Nugent. If you'd like more information on this code, feel free to read N. Tan's thesis at https://repository.wellesley.edu/object/ir1199 
 
 ### Installation
+0. To be most effective, this code relies on findorb to screen the found tracklets. To install findorb on your machine, follow the instructions here: https://projectpluto.com/install.htm 
+
 1. Clone this repository
 2. Ensure Python3 is installed
 3. Navigate to this folder using the terminal
