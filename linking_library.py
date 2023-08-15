@@ -41,10 +41,13 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
     if os.path.exists(os.path.expanduser(elements_path)):
         if os.path.getsize(os.path.expanduser(elements_path)) == 0:
             sleep(0.2)
-        numObs = sum(1 for line in open(os.path.expanduser("~/.find_orb/fo.txt")))
-        
+        #numObs = sum(1 for line in open(os.path.expanduser("~/.find_orb/fo.txt")))
+        numObs = sum(1 for line in open(os.path.expanduser("/projectnb/ct-ast/findPOTATOs/fo.txt")))
+
+
         # save all inputs to find_orb
-        open("outputs/AllPotentialTracklets.txt", "a+").writelines([l for l in open(os.path.expanduser("~/.find_orb/fo.txt")).readlines()])
+        #open("outputs/AllPotentialTracklets.txt", "a+").writelines([l for l in open(os.path.expanduser("~/.find_orb/fo.txt")).readlines()])
+        open("outputs/AllPotentialTracklets.txt", "a+").writelines([l for l in open(os.path.expanduser("/projectnb/ct-ast/findPOTATOs/fo.txt")).readlines()])
         for line in open(os.path.expanduser(elements_path)):
             li=line.strip()
             if not li.startswith("#"):

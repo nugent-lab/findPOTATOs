@@ -94,11 +94,11 @@ for m in np.arange(len(image_triplets_list)):
     # minimum speed an asteroid can travel to be detected, in arcseconds/second
     # this is calculated based on our astromemtric accuracy and time between frames
     time_interval_s=(b_time-a_time).sec
-    print('time interval',time_interval_s, 'seconds')
+    #print('time interval',time_interval_s, 'seconds')
 
     max_dist_rad=np.radians(max_speed*time_interval_s/3600)
     min_dist_rad=np.radians(astrometric_accuracy/3600)
-    print('max_dist_rad, in degrees', np.degrees(max_dist_rad))
+    #print('max_dist_rad, in degrees', np.degrees(max_dist_rad))
     #print ('TEMPORARY FOR TROUBLESHOOTING RESETTING MAX DIST')
     #max_dist_rad=np.radians(2)
 
