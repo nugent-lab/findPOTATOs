@@ -316,6 +316,7 @@ for m in np.arange(len(image_triplets_list)):
 
             findOrbTxt.close()
             print("fo.txt written to file.")
+
             trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
             if trackletFound == True:
                 if exists(trackletfilename):
@@ -330,6 +331,39 @@ for m in np.arange(len(image_triplets_list)):
                 complete_tracklets.drop(index=[i],inplace=True)
     else:
         for i in range(len(complete_tracklets)):
+            tracklet_id='cn'+str(i).rjust(5,'0')
+            decimal_time_a=str(a_time).split('.')
+            decimal_time_b=str(b_time).split('.')
+            decimal_time_c=str(c_time).split('.')
+
+            coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+            coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+            coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+
+            formatted_data = "     "
+            formatted_data += "{}".format(tracklet_id)+'  C'
+            formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
+            formatted_data += "{:1}".format(decimal_time_a[1][:5])+' '
+            formatted_data += coordA.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+            formatted_data += "{:.1f}".format(complete_tracklets.mag_a[i])+'   '
+            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+            
+            formatted_data += "     "
+            formatted_data += "{}".format(tracklet_id)+'  C'
+            formatted_data += "{}".format(b_time.strftime('%Y %m %d'))+'.'
+            formatted_data += "{:1}".format(decimal_time_b[1][:5])+' '
+            formatted_data += coordB.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+            formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
+            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+            
+            formatted_data += "     " 
+            formatted_data += "{}".format(tracklet_id)+'  C'
+            formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
+            formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
+            formatted_data += coordC.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+            formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
+            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+
             with open(trackletfilename, 'a', encoding="utf-8") as f:
                 f.write(formatted_data)
                 f.close
