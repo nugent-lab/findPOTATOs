@@ -272,7 +272,8 @@ for m in np.arange(len(image_triplets_list)):
     # now filter based on findorb
     trackletfilename="tracklets_"+night+'.txt'
     for i in range(len(complete_tracklets)):
-        findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
+        findOrbTxt = open(os.path("/projectnb/ct-ast/findPOTATOs/fo.txt"),"w")
+        #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
 
         tracklet_id='cn0000'+str(i)
         decimal_time_a=str(a_time).split('.')
@@ -299,7 +300,7 @@ for m in np.arange(len(image_triplets_list)):
         formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
         formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
         
-        formatted_data += "     "
+        formatted_data += "     " 
         formatted_data += "{}".format(tracklet_id)+'  C'
         formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
         formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
@@ -311,6 +312,7 @@ for m in np.arange(len(image_triplets_list)):
         findOrbTxt.writelines(formatted_data)
 
         findOrbTxt.close()
+        print("fo.txt written to file.")
         trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
         if trackletFound == True:
             if exists(trackletfilename):
