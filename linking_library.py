@@ -23,25 +23,29 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
     mean residual greater than maxResidual; not all observations in
     ~/.find_orb/fo.txt used), the function will return False.
     """
-    if os.path.exists(os.path.expanduser("~/.find_orb/elements.txt")):
-        os.remove(os.path.expanduser("~/.find_orb/elements.txt"))
-    sp = Popen(['cd ~/.find_orb\n~/find_orb/find_orb/fo fo.txt -c'], shell=True)
+    elements_path="~/.find_orb/elements.txt" #for mac 
+    if os.path.exists(os.path.expanduser(elements_path)):
+        os.remove(os.path.expanduser(elements_path))
+    # this line works on mac & some unix installs but not the MGHPCC
+    #sp = Popen(['cd ~/.find_orb\n~/find_orb/find_orb/fo fo.txt -c'], shell=True)
+    # this line is for the MGHPCC. Either way, you need the directory where your fo files are
+    sp = Popen(['cd /projectnb/ct-ast/find_orb_lib/find_orb/fo fo.txt -c'], shell=True)
     totSleep = 0
     # wait for find_orb to create elements.txt. If it takes longer than 20 seconds
     # then find_orb probably can't find an orbit.
-    while not os.path.exists(os.path.expanduser("~/.find_orb/elements.txt")):
+    while not os.path.exists(os.path.expanduser(elements_path)):
         sleep(0.2)
         totSleep = totSleep + 0.2
         if totSleep > 20:
             break
-    if os.path.exists(os.path.expanduser("~/.find_orb/elements.txt")):
-        if os.path.getsize(os.path.expanduser("~/.find_orb/elements.txt")) == 0:
+    if os.path.exists(os.path.expanduser(elements_path)):
+        if os.path.getsize(os.path.expanduser(elements_path)) == 0:
             sleep(0.2)
         numObs = sum(1 for line in open(os.path.expanduser("~/.find_orb/fo.txt")))
         
         # save all inputs to find_orb
         open("outputs/AllPotentialTracklets.txt", "a+").writelines([l for l in open(os.path.expanduser("~/.find_orb/fo.txt")).readlines()])
-        for line in open(os.path.expanduser("~/.find_orb/elements.txt")):
+        for line in open(os.path.expanduser(elements_path)):
             li=line.strip()
             if not li.startswith("#"):
                 open("outputs/AllPotentialTracklets.txt", "a").writelines(line.rstrip())
@@ -49,7 +53,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
         open("outputs/AllPotentialTracklets.txt", "a").writelines("\n\n")
 
         resCheck = False
-        for line in open(os.path.expanduser('~/.find_orb/elements.txt')):
+        for line in open(os.path.expanduser(elements_path)):
             match = re.search('mean residual (\d+)".(\d+)', line)
             match2 = re.search('MOID: (\d+).(\d+)', line)
             if match:

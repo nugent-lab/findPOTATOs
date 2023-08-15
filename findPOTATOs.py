@@ -267,7 +267,7 @@ for m in np.arange(len(image_triplets_list)):
             complete_tracklets.drop(index=[i],inplace=True)
             
     complete_tracklets.reset_index(inplace=True)
-
+    print("Initial tracklet screening of",len(complete_tracklets),"complete.")
 
     # now filter based on findorb
     trackletfilename="tracklets_"+night+'.txt'
