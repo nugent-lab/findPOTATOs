@@ -272,7 +272,7 @@ for m in np.arange(len(image_triplets_list)):
     # now filter based on findorb
     trackletfilename="tracklets_"+night+'.txt'
     for i in range(len(complete_tracklets)):
-        findOrbTxt = open(os.path("/projectnb/ct-ast/findPOTATOs/fo.txt"),"w")
+        findOrbTxt = open("/projectnb/ct-ast/findPOTATOs/fo.txt","w")
         #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
 
         tracklet_id='cn0000'+str(i)
