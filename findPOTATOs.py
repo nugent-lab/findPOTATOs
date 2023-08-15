@@ -27,6 +27,7 @@ max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, i
 # will pick the biggest of these to determine radius of which to search
 Maximum_residual = 0.3 #arcseconds #This is the maximum residual allowed after orbfit fit
 astrometric_accuracy=3 #arcseconds
+findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 ###############################
 
 get_night_id=input_filename.split('.')
@@ -270,61 +271,68 @@ for m in np.arange(len(image_triplets_list)):
     print("Initial tracklet screening of",len(complete_tracklets),"complete.")
 
     # now filter based on findorb
+
     trackletfilename="tracklets_"+night+'.txt'
-    for i in range(len(complete_tracklets)):
-        findOrbTxt = open("/projectnb/ct-ast/findPOTATOs/fo.txt","w")
-        #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
+    if findorb_check == 'y':
+        for i in range(len(complete_tracklets)):
+            findOrbTxt = open("/projectnb/ct-ast/findPOTATOs/fo.txt","w")
+            #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
 
-        tracklet_id='cn0000'+str(i)
-        decimal_time_a=str(a_time).split('.')
-        decimal_time_b=str(b_time).split('.')
-        decimal_time_c=str(c_time).split('.')
+            tracklet_id='cn'+str(i).rjust(5,'0')
+            decimal_time_a=str(a_time).split('.')
+            decimal_time_b=str(b_time).split('.')
+            decimal_time_c=str(c_time).split('.')
 
-        coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-        coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-        coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+            coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+            coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+            coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
 
-        formatted_data = "     "
-        formatted_data += "{}".format(tracklet_id)+'  C'
-        formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
-        formatted_data += "{:1}".format(decimal_time_a[1][:5])+' '
-        formatted_data += coordA.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-        formatted_data += "{:.1f}".format(complete_tracklets.mag_a[i])+'   '
-        formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-        
-        formatted_data += "     "
-        formatted_data += "{}".format(tracklet_id)+'  C'
-        formatted_data += "{}".format(b_time.strftime('%Y %m %d'))+'.'
-        formatted_data += "{:1}".format(decimal_time_b[1][:5])+' '
-        formatted_data += coordB.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-        formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
-        formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-        
-        formatted_data += "     " 
-        formatted_data += "{}".format(tracklet_id)+'  C'
-        formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
-        formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
-        formatted_data += coordC.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-        formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
-        formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+            formatted_data = "     "
+            formatted_data += "{}".format(tracklet_id)+'  C'
+            formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
+            formatted_data += "{:1}".format(decimal_time_a[1][:5])+' '
+            formatted_data += coordA.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+            formatted_data += "{:.1f}".format(complete_tracklets.mag_a[i])+'   '
+            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+            
+            formatted_data += "     "
+            formatted_data += "{}".format(tracklet_id)+'  C'
+            formatted_data += "{}".format(b_time.strftime('%Y %m %d'))+'.'
+            formatted_data += "{:1}".format(decimal_time_b[1][:5])+' '
+            formatted_data += coordB.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+            formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
+            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+            
+            formatted_data += "     " 
+            formatted_data += "{}".format(tracklet_id)+'  C'
+            formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
+            formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
+            formatted_data += coordC.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+            formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
+            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
 
-        #print(formatted_data)
-        findOrbTxt.writelines(formatted_data)
+            #print(formatted_data)
+            findOrbTxt.writelines(formatted_data)
 
-        findOrbTxt.close()
-        print("fo.txt written to file.")
-        trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
-        if trackletFound == True:
-            if exists(trackletfilename):
-                with open(trackletfilename, 'a', encoding="utf-8") as f:
-                    f.write(formatted_data)
-                    f.close
-            else:
-                with open(trackletfilename, 'x', encoding="utf-8") as f:
-                    f.write(formatted_data)
-                    f.close
-        else: #drop it
-            complete_tracklets.drop(index=[i],inplace=True)
+            findOrbTxt.close()
+            print("fo.txt written to file.")
+            trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
+            if trackletFound == True:
+                if exists(trackletfilename):
+                    with open(trackletfilename, 'a', encoding="utf-8") as f:
+                        f.write(formatted_data)
+                        f.close
+                else:
+                    with open(trackletfilename, 'x', encoding="utf-8") as f:
+                        f.write(formatted_data)
+                        f.close
+            else: #drop it
+                complete_tracklets.drop(index=[i],inplace=True)
+    else:
+        for i in range(len(complete_tracklets)):
+            with open(trackletfilename, 'a', encoding="utf-8") as f:
+                f.write(formatted_data)
+                f.close
 
     #save stats
     now = datetime.now() 
