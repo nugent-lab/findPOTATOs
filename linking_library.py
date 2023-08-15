@@ -29,7 +29,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
     # this line works on mac & some unix installs but not the MGHPCC
     #sp = Popen(['cd ~/.find_orb\n~/find_orb/find_orb/fo fo.txt -c'], shell=True)
     # this line is for the MGHPCC. Either way, you need the directory where your fo files are
-    sp = Popen(['/projectnb/ct-ast/find_orb_lib/find_orb/fo fo.txt -c'], shell=True)
+    sp = Popen(['o fo.txt -c'], shell=True)
     totSleep = 0
     # wait for find_orb to create elements.txt. If it takes longer than 20 seconds
     # then find_orb probably can't find an orbit.
