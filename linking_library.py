@@ -1,6 +1,7 @@
 import astropy.units as u
 import os 
 from subprocess import Popen # used to call Find_Orb
+import supbrocess 
 import re # regular expressions, used to search for mean residuals in Find_orb output files
 from time import sleep
 import pandas as pd
@@ -30,7 +31,8 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
     #sp = Popen(['cd ~/.find_orb\n~/find_orb/find_orb/fo fo.txt -c'], shell=True)
     # this line is for the MGHPCC. Either way, you need the directory where your fo files are
     # the subprocess module reacts poorly to the supercomputer.
-    os.system('fo fo.txt -c')
+    #os.system('fo fo.txt -c')
+    sp = subprocess.call(['fo fo.txt -c'], shell=True)
     totSleep = 0
     # wait for find_orb to create elements.txt. If it takes longer than 20 seconds
     # then find_orb probably can't find an orbit.
