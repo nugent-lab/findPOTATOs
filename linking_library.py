@@ -1,7 +1,7 @@
 import astropy.units as u
 import os 
 from subprocess import Popen # used to call Find_Orb
-import supbrocess 
+import subprocess 
 import re # regular expressions, used to search for mean residuals in Find_orb output files
 from time import sleep
 import pandas as pd
