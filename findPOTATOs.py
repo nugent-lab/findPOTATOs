@@ -28,7 +28,7 @@ max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, i
 # will pick the biggest of these to determine radius of which to search
 Maximum_residual = 1.0 #arcseconds #This is the maximum residual allowed after orbfit fit
 astrometric_accuracy=1 #arcseconds
-findorb_check='n' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
+findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
 # The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
 # this code requires a exposure correction of +10 seconds. 
@@ -281,7 +281,7 @@ for m in np.arange(len(image_triplets_list)):
             #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
 
             tracklet_id='cn'+str(tracklet_num).rjust(5,'0')
-            tracklet_id += 1
+            tracklet_num += 1
             decimal_time_a=str(a_time).split('.')
             decimal_time_b=str(b_time).split('.')
             decimal_time_c=str(c_time).split('.')
