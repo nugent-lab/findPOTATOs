@@ -80,7 +80,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
         if  resCheck:
             return True
         else:
-            print("Residuals,"res," exceed maxResidual:", maxResidual)
+            print("Residuals,",res," exceed maxResidual:", maxResidual)
             return False
     else:
         return False
