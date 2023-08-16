@@ -177,7 +177,7 @@ for m in np.arange(len(image_triplets_list)):
 
     if len(candidate_tracklet) == 0:
         print("No pairs found.")
-        break
+        continue #skip to next frame triplet
 
     # this next part is the distance between point a, and second point
     # that is projected at ra_a, dec_b
@@ -239,7 +239,7 @@ for m in np.arange(len(image_triplets_list)):
 
     if len(complete_tracklets) == 0:
         print("No tracklets found.")
-        break
+        continue #skip to next frame triplet
 
     # # Tracklet screening
     # A slow moving tracklet has a relatively large search radious for
