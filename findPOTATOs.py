@@ -14,7 +14,8 @@ from linking_library import *
 #  August 2023
 
 ########## PARAMETERS ##########
-input_filename='image_triplets_20011120.csv'
+#input_filename='image_triplets_20011120.csv'
+input_filename='test_find_tracklet.csv'
 input_directory='../NEAT_reprocessing/output/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
 #you don't want this more than ~1/5th of the size of the frame, anything
@@ -315,10 +316,10 @@ for m in np.arange(len(image_triplets_list)):
             findOrbTxt.writelines(formatted_data)
 
             findOrbTxt.close()
-            print("fo.txt written to file.")
-
+            
             trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
             if trackletFound == True:
+                print("confirmed tracklet!")
                 if exists(trackletfilename):
                     with open(trackletfilename, 'a', encoding="utf-8") as f:
                         f.write(formatted_data)
@@ -364,9 +365,14 @@ for m in np.arange(len(image_triplets_list)):
             formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
             formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
 
-            with open(trackletfilename, 'a', encoding="utf-8") as f:
-                f.write(formatted_data)
-                f.close
+            if exists(trackletfilename):
+                with open(trackletfilename, 'a', encoding="utf-8") as f:
+                    f.write(formatted_data)
+                    f.close
+            else:
+                with open(trackletfilename, 'x', encoding="utf-8") as f:
+                    f.write(formatted_data)
+                    f.close
 
     #save stats
     now = datetime.now() 
