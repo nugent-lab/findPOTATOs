@@ -75,10 +75,12 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
                 if MOIDLim:
                     MOID = int(match2.group(1)) + float(('0.'+match2.group(2)))
                     if MOID > MOIDLim:
+                        print("MOID exceeds MOIDLim")
                         break
         if  resCheck:
             return True
         else:
+            print("residuals too high")
             return False
     else:
         return False
