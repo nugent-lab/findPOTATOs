@@ -318,6 +318,7 @@ for m in np.arange(len(image_triplets_list)):
             findOrbTxt.close()
             
             trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
+            print("tracklet status:",trackletFound)
             if trackletFound == True:
                 print("confirmed tracklet!")
                 if exists(trackletfilename):
@@ -329,6 +330,7 @@ for m in np.arange(len(image_triplets_list)):
                         f.write(formatted_data)
                         f.close
             else: #drop it
+                print("tracklet rejected")
                 complete_tracklets.drop(index=[i],inplace=True)
     else:
         for i in range(len(complete_tracklets)):
