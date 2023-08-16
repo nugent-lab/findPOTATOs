@@ -27,8 +27,8 @@ timing_uncertainty= 5 #seconds
 max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, in mag
 # will pick the biggest of these to determine radius of which to search
 Maximum_residual = 1.0 #arcseconds #This is the maximum residual allowed after orbfit fit
-astrometric_accuracy=3 #arcseconds
-findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
+astrometric_accuracy=1 #arcseconds
+findorb_check='n' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
 # The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
 # this code requires a exposure correction of +10 seconds. 
@@ -38,20 +38,13 @@ get_night_id=input_filename.split('.')
 get_night_id=get_night_id[0].split('_')
 night=get_night_id[2]
 image_triplets_list=pd.read_csv(input_filename)
+tracklet_num=0
 
 for m in np.arange(len(image_triplets_list)):
     file_a='o_sources'+image_triplets_list.filea[m]+'.csv'
     file_b='o_sources'+image_triplets_list.fileb[m]+'.csv'
     file_c='o_sources'+image_triplets_list.filec[m]+'.csv'
-    print ("Checking file triplet:",file_a,file_b,file_c)
-    #night='2002010102'
-    #file_a='o_sources20020101020555c.csv'
-    #file_b='o_sources20020101023551c.csv'
-    #file_c='o_sources20020101030745c.csv'
-
-    #file_a='o_sources20020104101451c.csv'
-    #file_b='o_sources20020104093953c.csv'
-    #file_c='o_sources20020104090911c.csv'
+    print ("Checking file triplet number", m,"consisting of:",file_a,file_b,file_c)
 
     #Put frames in exposure order, so that frame a is first, b is second, and c is third.
     init_a=pd.read_csv(input_directory+file_a)
@@ -199,8 +192,6 @@ for m in np.arange(len(image_triplets_list)):
     delta_dec=np.radians(candidate_tracklet.dec_b)-np.radians(candidate_tracklet.dec_a)
     pred_c_pos_ra=np.radians(candidate_tracklet.ra_b)+delta_ra
     pred_c_pos_dec=np.radians(candidate_tracklet.dec_b)+delta_dec
-    #print(len(pred_c_pos_ra))
-
 
     # use yet another ball tree to see if there's any  
     # detections in expected radius from predicted position
@@ -289,7 +280,8 @@ for m in np.arange(len(image_triplets_list)):
             findOrbTxt = open("/projectnb/ct-ast/findPOTATOs/fo.txt","w")
             #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
 
-            tracklet_id='cn'+str(i).rjust(5,'0')
+            tracklet_id='cn'+str(tracklet_num).rjust(5,'0')
+            tracklet_id += 1
             decimal_time_a=str(a_time).split('.')
             decimal_time_b=str(b_time).split('.')
             decimal_time_c=str(c_time).split('.')
