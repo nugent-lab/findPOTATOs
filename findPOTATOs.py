@@ -14,8 +14,8 @@ from linking_library import *
 #  August 2023
 
 ########## PARAMETERS ##########
-#input_filename='image_triplets_20011120.csv'
-input_filename='test_find_tracklet.csv'
+input_filename='image_triplets_20011120.csv'
+#input_filename='test_find_tracklet.csv'
 input_directory='../NEAT_reprocessing/output/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
 #you don't want this more than ~1/5th of the size of the frame, anything
