@@ -26,9 +26,12 @@ min_tracklet_angle= 135 #degrees
 timing_uncertainty= 5 #seconds
 max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, in mag
 # will pick the biggest of these to determine radius of which to search
-Maximum_residual = 0.3 #arcseconds #This is the maximum residual allowed after orbfit fit
+Maximum_residual = 1.0 #arcseconds #This is the maximum residual allowed after orbfit fit
 astrometric_accuracy=3 #arcseconds
 findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
+exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
+# The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
+# this code requires a exposure correction of +10 seconds. 
 ###############################
 
 get_night_id=input_filename.split('.')
@@ -50,10 +53,11 @@ for m in np.arange(len(image_triplets_list)):
     #file_b='o_sources20020104093953c.csv'
     #file_c='o_sources20020104090911c.csv'
 
-    #guess which one is a, b, c, check and then assign a, b, c in order
+    #Put frames in exposure order, so that frame a is first, b is second, and c is third.
     init_a=pd.read_csv(input_directory+file_a)
     init_b=pd.read_csv(input_directory+file_b)
     init_c=pd.read_csv(input_directory+file_c)
+    
     init_a_time=Time(init_a.mjd[0].astype(float), format='mjd', scale='utc')
     init_b_time=Time(init_b.mjd[0].astype(float), format='mjd', scale='utc')
     init_c_time=Time(init_c.mjd[0].astype(float), format='mjd', scale='utc')
@@ -70,9 +74,15 @@ for m in np.arange(len(image_triplets_list)):
     a=pd.read_csv(input_directory+order_frames.names[0])
     b=pd.read_csv(input_directory+order_frames.names[1])
     c=pd.read_csv(input_directory+order_frames.names[2])
+    # correct for time- MPC wants midponint of expsure, but this code takes
+    # the input as beginning of exposure time
+    exposure_correction_mjd= exposure_correction/(24*60*60)#convert from seconds to fraction of days
     a_time=Time(a.mjd[0].astype(float), format='mjd', scale='utc')
     b_time=Time(b.mjd[0].astype(float), format='mjd', scale='utc')
     c_time=Time(c.mjd[0].astype(float), format='mjd', scale='utc')
+    a_time += exposure_correction_mjd
+    b_time += exposure_correction_mjd
+    c_time += exposure_correction_mjd
     #print("frames,", order_frames.names[0],order_frames.names[1],order_frames.names[2])
     #print(a_time,b_time,c_time)
 
@@ -318,7 +328,7 @@ for m in np.arange(len(image_triplets_list)):
             findOrbTxt.close()
             
             trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
-            print("tracklet status:",trackletFound)
+            #print("tracklet status:",trackletFound)
             if trackletFound == True:
                 print("confirmed tracklet!")
                 if exists(trackletfilename):
