@@ -26,7 +26,7 @@ min_tracklet_angle= 135 #degrees
 timing_uncertainty= 5 #seconds
 max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, in mag
 # will pick the biggest of these to determine radius of which to search
-Maximum_residual = 1.0 #arcseconds #This is the maximum residual allowed after orbfit fit
+Maximum_residual = .7 #arcseconds #This is the maximum residual allowed after orbfit fit
 astrometric_accuracy=1 #arcseconds
 findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
@@ -271,7 +271,7 @@ for m in np.arange(len(image_triplets_list)):
             
     complete_tracklets.reset_index(inplace=True)
     print("Initial tracklet screening of",len(complete_tracklets),"complete.")
-
+    sys.stdout.flush() #print out everything before running FindOrb
     # now filter based on findorb
 
     trackletfilename="tracklets_"+night+'.txt'
@@ -322,7 +322,7 @@ for m in np.arange(len(image_triplets_list)):
             trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
             #print("tracklet status:",trackletFound)
             if trackletFound == True:
-                print("confirmed tracklet!")
+                print("confirmed tracklet!", formatted_data)
                 if exists(trackletfilename):
                     with open(trackletfilename, 'a', encoding="utf-8") as f:
                         f.write(formatted_data)
