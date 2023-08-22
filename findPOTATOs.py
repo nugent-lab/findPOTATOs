@@ -9,15 +9,15 @@ from sklearn.neighbors import BallTree
 from os.path import exists
 from astropy.coordinates import SkyCoord, Angle, Distance
 from linking_library import *
-import sys
+import sys  
 
 #  C.R. Nugent and N. Tan
 #  August 2023
 
 ########## PARAMETERS ##########
-input_filename='image_triplets_20011120.csv'
-#input_filename='test_find_tracklet.csv'
+# input filename provided at call
 input_directory='../NEAT_reprocessing/output/'
+#input_directory='sources/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
 #you don't want this more than ~1/5th of the size of the frame, anything
 #faster is both unlikely and undetectable as it will leave the frame before 
@@ -34,6 +34,8 @@ exposure_correction=10 #seconds. This code takes input as time at beginning of e
 # The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
 # this code requires a exposure correction of +10 seconds. 
 ###############################
+
+input_filename = sys.argv[1]
 
 get_night_id=input_filename.split('.')
 get_night_id=get_night_id[0].split('_')
@@ -249,9 +251,12 @@ for m in np.arange(len(image_triplets_list)):
     # so do another screening.
     # this assumes an arbitrary distance to calculate angle. 
     # also screens for magnitude
+    angle_array=[]
+    mag_array=[]
     for i in range(len(complete_tracklets)):
         mag_min=np.min([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
         mag_max=np.max([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
+        
         if (mag_max-mag_min) <max_mag_variance:    
             coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
             coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
@@ -266,15 +271,22 @@ for m in np.arange(len(image_triplets_list)):
         # print("Angle between points A, B, and C:", angle, "degrees")
             if angle.value < min_tracklet_angle:
                 complete_tracklets.drop(index=[i],inplace=True)
-                #print("dropped")
+            else:
+                angle_array.append(angle)
+                mag_array.append(mag_max-mag_min)
         else:
             complete_tracklets.drop(index=[i],inplace=True)
-            
+
+ 
     complete_tracklets.reset_index(inplace=True)
+    complete_tracklets['angle']=angle_array
+    complete_tracklets['mag_diff']=mag_array    
+
     print("Initial tracklet screening of",len(complete_tracklets),"complete.")
     sys.stdout.flush() #print out everything before running FindOrb
     # now filter based on findorb
 
+    tracklet_features="tracklet_features"+night+'.txt'
     trackletfilename="tracklets_"+night+'.txt'
     if findorb_check == 'y':
         for i in range(len(complete_tracklets)):
@@ -320,7 +332,7 @@ for m in np.arange(len(image_triplets_list)):
 
             findOrbTxt.close()
             
-            trackletFound = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
+            trackletFound, res = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
             #print("tracklet status:",trackletFound)
             if trackletFound == True:
                 print("confirmed tracklet!", formatted_data)
@@ -332,6 +344,17 @@ for m in np.arange(len(image_triplets_list)):
                     with open(trackletfilename, 'x', encoding="utf-8") as f:
                         f.write(formatted_data)
                         f.close
+            
+                if exists(tracklet_features):
+                    with open(tracklet_features, 'a', encoding="utf-8") as f:
+                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                        f.close
+                else:
+                    with open(tracklet_features, 'x', encoding="utf-8") as f:
+                        f.write("tracklet_id,angle,residual,angle_deg,mag_diff\n")
+                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                        f.close            
+            
             else: #drop it
                 print("tracklet rejected")
                 complete_tracklets.drop(index=[i],inplace=True)
@@ -378,6 +401,16 @@ for m in np.arange(len(image_triplets_list)):
                 with open(trackletfilename, 'x', encoding="utf-8") as f:
                     f.write(formatted_data)
                     f.close
+
+            if exists(tracklet_features):
+                with open(tracklet_features, 'a', encoding="utf-8") as f:
+                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                    f.close
+            else:
+                with open(tracklet_features, 'x', encoding="utf-8") as f:
+                    f.write("tracklet_id,angle,angle_deg,mag_diff\n")
+                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                    f.close     
 
     #save stats
     now = datetime.now() 
