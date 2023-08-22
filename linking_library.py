@@ -42,7 +42,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
         totSleep = totSleep + 0.2
         if totSleep > 20:
             break
-    try os.path.exists(os.path.expanduser(elements_path)):
+    if os.path.exists(os.path.expanduser(elements_path)):
         if os.path.getsize(os.path.expanduser(elements_path)) == 0:
             sleep(0.2)
         #numObs = sum(1 for line in open(os.path.expanduser("~/.find_orb/fo.txt")))
@@ -86,7 +86,8 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
     #    else:
     #        print("Residuals,",res," exceed maxResidual:", maxResidual)
     #        return False
-    #else:
+    else:
+        print("Could not open file",os.path.expanduser(elements_path))
     return resCheck, res
 
 
