@@ -42,7 +42,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
         totSleep = totSleep + 0.2
         if totSleep > 20:
             break
-    if os.path.exists(os.path.expanduser(elements_path)):
+    try os.path.exists(os.path.expanduser(elements_path)):
         if os.path.getsize(os.path.expanduser(elements_path)) == 0:
             sleep(0.2)
         #numObs = sum(1 for line in open(os.path.expanduser("~/.find_orb/fo.txt")))
@@ -81,13 +81,13 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
                     if MOID > MOIDLim:
                         print("MOID:",MOID," exceeds MOIDLim:", MOIDLIM)
                         break
-        if  resCheck:
-            return True
-        else:
-            print("Residuals,",res," exceed maxResidual:", maxResidual)
-            return False
-    else:
-        return False
+    #    if  resCheck:
+    #        return True
+    #    else:
+    #        print("Residuals,",res," exceed maxResidual:", maxResidual)
+    #        return False
+    #else:
+    return resCheck, res
 
 
 def remove_stationary_sources(df1, df2, df3, thresh):
