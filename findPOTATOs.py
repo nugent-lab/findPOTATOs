@@ -333,8 +333,7 @@ for m in np.arange(len(image_triplets_list)):
             findOrbTxt.close()
             
             trackletFound, res = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
-            #print("tracklet status:",trackletFound)
-            if trackletFound == True:
+            if trackletFound == 'yes':
                 print("confirmed tracklet!", formatted_data)
                 if exists(trackletfilename):
                     with open(trackletfilename, 'a', encoding="utf-8") as f:
@@ -347,12 +346,12 @@ for m in np.arange(len(image_triplets_list)):
             
                 if exists(tracklet_features):
                     with open(tracklet_features, 'a', encoding="utf-8") as f:
-                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(res)+'\n')
                         f.close
                 else:
                     with open(tracklet_features, 'x', encoding="utf-8") as f:
-                        f.write("tracklet_id,angle,residual,angle_deg,mag_diff\n")
-                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                        f.write("tracklet_id,angle,residual,angle_deg,mag_diff,res\n")
+                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(res)+'\n')
                         f.close            
             
             else: #drop it

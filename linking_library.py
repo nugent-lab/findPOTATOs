@@ -23,7 +23,15 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
     function will return True. In other cases (e.g. find_orb doesn't run;
     mean residual greater than maxResidual; not all observations in
     ~/.find_orb/fo.txt used), the function will return False.
+
+    Args:
+        maxResidual: float, maximum residual allowed for tracklet to be approved 
+
+    Returns:
+        trackletFound: string, equals 'yes' if passed
+        res: associated residual with found tracklet 
     """
+    trackletFound='no'
     elements_path="~/.find_orb/elements.txt" #for mac 
     if os.path.exists(os.path.expanduser(elements_path)):
         os.remove(os.path.expanduser(elements_path))
@@ -81,14 +89,14 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
                     if MOID > MOIDLim:
                         print("MOID:",MOID," exceeds MOIDLim:", MOIDLIM)
                         break
-    #    if  resCheck:
-    #        return True
+        if  resCheck:
+            trackletFound='yes'
     #    else:
     #        print("Residuals,",res," exceed maxResidual:", maxResidual)
     #        return False
     else:
         print("Could not open file",os.path.expanduser(elements_path))
-    return resCheck, res
+    return trackletFound, res
 
 
 def remove_stationary_sources(df1, df2, df3, thresh):
