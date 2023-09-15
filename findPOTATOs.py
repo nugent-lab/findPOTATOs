@@ -17,6 +17,14 @@ import sys
 ########## PARAMETERS ##########
 # input filename provided at call
 input_directory='../NEAT_reprocessing/output/'
+
+compare_to_mpc='y'#turn this on (='y')if you want to compare output to 
+#existing MPC submissions in 80-char format. 
+mpc_file='../mpc/AllObs644.txt' #only need this if above is yes. Needs to be 80-char format and only
+#include the submissions from the observatory you are interested in.
+max_dist_arcsec = 2 # only if comparing to MPC. max distance between things you want paired, in arcseconds
+
+
 #input_directory='sources/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
 #you don't want this more than ~1/5th of the size of the frame, anything
@@ -29,8 +37,9 @@ max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, i
 # will pick the biggest of these to determine radius of which to search
 Maximum_residual = .7 #arcseconds #This is the maximum residual allowed after orbfit fit
 astrometric_accuracy=1 #arcseconds
-findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
+findorb_check='n' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
+
 # The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
 # this code requires a exposure correction of +10 seconds. 
 ###############################
@@ -42,6 +51,20 @@ get_night_id=get_night_id[0].split('_')
 night=get_night_id[2]
 image_triplets_list=pd.read_csv(input_filename)
 tracklet_num=0
+
+if compare_to_mpc =='y':
+    print("Comparing detectoins to MPC submissions.")
+    grep_str='\''+night[:4]+' '+night[4:6]+' '+night[6:8]+'\''
+    os.popen('grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
+    mpc=mpc_reader("temp_mpc.txt")
+    mpc['ra_rad']  = np.radians(mpc['RA'])
+    mpc['dec_rad'] = np.radians(mpc['Dec'])
+    mpc['detected']=1 #1 if only in mpc, if we find it in our files we'll change this to 'NaN' later and then drop the nans.
+    tree = BallTree(mpc[['ra_rad', 'dec_rad']], metric='haversine')
+    max_dist_rad=np.radians(max_dist_arcsec/3600)
+    #index the mpc file, since it's smaller. But, as always convert
+    #to radians first.
+
 
 for m in np.arange(len(image_triplets_list)):
     file_a='o_sources'+image_triplets_list.filea[m]+'.csv'
@@ -57,6 +80,9 @@ for m in np.arange(len(image_triplets_list)):
     init_a_time=Time(init_a.mjd[0].astype(float), format='mjd', scale='utc')
     init_b_time=Time(init_b.mjd[0].astype(float), format='mjd', scale='utc')
     init_c_time=Time(init_c.mjd[0].astype(float), format='mjd', scale='utc')
+
+
+
 
     #put frames in order
     order_frames=pd.DataFrame({
@@ -79,8 +105,12 @@ for m in np.arange(len(image_triplets_list)):
     a_time += exposure_correction_mjd
     b_time += exposure_correction_mjd
     c_time += exposure_correction_mjd
+    decimal_time_a=str(a_time).split('.')
+    decimal_time_b=str(b_time).split('.')
+    decimal_time_c=str(c_time).split('.')
     #print("frames,", order_frames.names[0],order_frames.names[1],order_frames.names[2])
     #print(a_time,b_time,c_time)
+
 
     # # Remove Stationary Sources
     # The nearest neighbors code (balltree, haversine metric)
@@ -92,6 +122,24 @@ for m in np.arange(len(image_triplets_list)):
     b['dec_rad'] = np.radians(b['Dec'])
     c['ra_rad'] = np.radians(c['RA'])
     c['dec_rad'] = np.radians(c['Dec'])
+
+    if compare_to_mpc == 'y':
+        # report any detections that are in MPC file but NOT in your files for 
+        # given time 
+        indicies, distances = tree.query_radius(a[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=True)
+        for i in range(len(indicies)):
+            for j in range(len(indicies[i])):
+                mpc.loc['detected',indicies[i][j]]='NaN'
+        indicies, distances = tree.query_radius(b[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=True)
+        for i in range(len(indicies)):
+            for j in range(len(indicies[i])):
+                mpc.loc['detected',indicies[i][j]]='NaN'
+        indicies, distances = tree.query_radius(c[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=True)
+        for i in range(len(indicies)):
+            for j in range(len(indicies[i])):
+                mpc.loc['detected',indicies[i][j]]='NaN'
+
+
     a_moving, b_moving, c_moving=remove_stationary_sources(a, b, c, astrometric_accuracy) #threshold of 2 arsec is rougly our accuracy near the edges
 
     #In the following, distances stored in dataframes are in radians, because that's
@@ -253,6 +301,7 @@ for m in np.arange(len(image_triplets_list)):
     # also screens for magnitude
     angle_array=[]
     mag_array=[]
+    mag_min_array=[]
     for i in range(len(complete_tracklets)):
         mag_min=np.min([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
         mag_max=np.max([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
@@ -274,13 +323,15 @@ for m in np.arange(len(image_triplets_list)):
             else:
                 angle_array.append(angle)
                 mag_array.append(mag_max-mag_min)
+                mag_min_array.append(mag_min)
         else:
             complete_tracklets.drop(index=[i],inplace=True)
 
  
     complete_tracklets.reset_index(inplace=True)
     complete_tracklets['angle']=angle_array
-    complete_tracklets['mag_diff']=mag_array    
+    complete_tracklets['mag_diff']=mag_array 
+    complete_tracklets['mag_min']=mag_min_array   
 
     print("Initial tracklet screening of",len(complete_tracklets),"complete.")
     sys.stdout.flush() #print out everything before running FindOrb
@@ -295,9 +346,7 @@ for m in np.arange(len(image_triplets_list)):
 
             tracklet_id='cn'+str(tracklet_num).rjust(5,'0')
             tracklet_num += 1
-            decimal_time_a=str(a_time).split('.')
-            decimal_time_b=str(b_time).split('.')
-            decimal_time_c=str(c_time).split('.')
+
 
             coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
             coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
@@ -333,7 +382,7 @@ for m in np.arange(len(image_triplets_list)):
             findOrbTxt.close()
             
             trackletFound, res = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
-            if trackletFound == 'yes':
+            if trackletFound == 'y':
                 print("confirmed tracklet!", formatted_data)
                 if exists(trackletfilename):
                     with open(trackletfilename, 'a', encoding="utf-8") as f:
@@ -346,12 +395,12 @@ for m in np.arange(len(image_triplets_list)):
             
                 if exists(tracklet_features):
                     with open(tracklet_features, 'a', encoding="utf-8") as f:
-                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(res)+'\n')
+                        f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+'\n')
                         f.close
                 else:
                     with open(tracklet_features, 'x', encoding="utf-8") as f:
-                        f.write("tracklet_id,angle,residual,angle_deg,mag_diff,res\n")
-                        f.write(tracklet_id+','+str(res)+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(res)+'\n')
+                        f.write("tracklet_id,angle_deg,mag_diff,mag_min,residual\n")
+                        f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+'\n')
                         f.close            
             
             else: #drop it
@@ -403,12 +452,13 @@ for m in np.arange(len(image_triplets_list)):
 
             if exists(tracklet_features):
                 with open(tracklet_features, 'a', encoding="utf-8") as f:
-                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+'\n')
                     f.close
             else:
                 with open(tracklet_features, 'x', encoding="utf-8") as f:
-                    f.write("tracklet_id,angle,angle_deg,mag_diff\n")
-                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+'\n')
+                    f.write("tracklet_id,angle_deg,mag_diff,mag_min\n")
+                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+'\n')
+                     
                     f.close     
 
     #save stats
@@ -428,3 +478,9 @@ for m in np.arange(len(image_triplets_list)):
             f.write("filea,fileb,filec,date_corrected,time_corrected,run_time_s,num_sources,num_tracklets_prescreen\n")
             f.write(file_a +","+file_b+","+file_c+","+datetime.today().strftime('%Y-%m-%d')+','+                datetime.today().strftime('%H:%M:%S') +","+ run_time +","+ num_sources +","+ num_tracklets_prescreen+'\n')
         f.close
+
+
+if compare_to_mpc == 'y':
+    os.popen('rm temp_mpc.txt')
+    mpc.dropna(inplace=True)
+    mpc.to_csv('mpc_comparison'+night+'.csv')

@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from astropy.time import Time
+from astropy.coordinates import SkyCoord, Angle, Distance
 from sklearn.neighbors import BallTree
 
 
@@ -196,3 +197,43 @@ def remove_stationary_sources(df1, df2, df3, thresh):
         round(len(df2_moving) / len(df2), 2),
         round(len(df3_moving) / len(df3), 2))
     return df1_moving, df2_moving, df3_moving
+
+def mpc_reader(file_name):
+    """
+    Reads in 80-char observation file.
+    Args:
+        file_name: string of filename to be read
+    Returns:
+        dat: dataframe of file
+    """
+    txt_file = open(file_name)
+    track_id=[]
+    date=[]
+    ra=[]
+    dec=[]
+    mag=[]
+    # run through until file ends
+    while 1: 
+        #pull 50 lines from memory at a time
+        lines = txt_file.readlines(50)
+        #break if at the end of file
+        if not lines:
+            break
+        #look through each line
+        for line in lines:
+            #print(line)
+            track_id.append(line[:12].strip(' '))
+            # get the date into the right format for astropy
+            prelim_date=line[15:25].replace(' ','-')
+            t = Time(prelim_date, format='isot', scale='utc')
+            frac=float(line[25:31])
+            newt=Time(t.mjd+frac, format='mjd', scale='utc')
+            date.append(newt.mjd)
+            c = SkyCoord(line[32:43],line[45:55], unit=(u.hourangle, u.deg))
+            ra.append(c.ra.degree)
+            dec.append(c.dec.degree)
+            mag.append(line[65:70])
+            #print(newt.mjd, c.ra.degree, c.dec.degree)
+    d={'tracklet_id':track_id, 'date_mjd':date, 'RA':ra, 'Dec':dec, 'mag':mag}
+    dat=pd.DataFrame(data=d)
+    return dat
