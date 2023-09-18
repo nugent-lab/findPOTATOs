@@ -37,7 +37,7 @@ max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, i
 # will pick the biggest of these to determine radius of which to search
 Maximum_residual = .7 #arcseconds #This is the maximum residual allowed after orbfit fit
 astrometric_accuracy=1 #arcseconds
-findorb_check='n' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
+findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
 
 # The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
@@ -329,7 +329,7 @@ for m in np.arange(len(image_triplets_list)):
             else:
                 angle_array.append(angle)
                 mag_array.append(mag_max-mag_min)
-                mag_min_array.append(mag_min)
+                mag_min_array.append(mag_max)# because the "minimum" mag you want is the faintest one
         else:
             complete_tracklets.drop(index=[i],inplace=True)
 
