@@ -53,15 +53,21 @@ image_triplets_list=pd.read_csv(input_filename)
 tracklet_num=0
 
 if compare_to_mpc =='y':
-    print("Comparing detectoins to MPC submissions.")
+    print("Comparing detections to MPC submissions.")
+    #remove this file just in case it still exists due to a previous crash
+    os.popen('rm temp_mpc.txt')
     grep_str='\''+night[:4]+' '+night[4:6]+' '+night[6:8]+'\''
     os.popen('grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
-    mpc=mpc_reader("temp_mpc.txt")
-    mpc['ra_rad']  = np.radians(mpc['RA'])
-    mpc['dec_rad'] = np.radians(mpc['Dec'])
-    mpc['detected']=1 #1 if only in mpc, if we find it in our files we'll change this to 'NaN' later and then drop the nans.
-    tree = BallTree(mpc[['ra_rad', 'dec_rad']], metric='haversine')
-    max_dist_rad=np.radians(max_dist_arcsec/3600)
+    print('query: grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
+    try:
+        mpc=mpc_reader("temp_mpc.txt")
+        mpc['ra_rad']  = np.radians(mpc['RA'])
+        mpc['dec_rad'] = np.radians(mpc['Dec'])
+        mpc['detected']=1 #1 if only in mpc, if we find it in our files we'll change this to 'NaN' later and then drop the nans.
+        tree = BallTree(mpc[['ra_rad', 'dec_rad']], metric='haversine')
+        max_dist_rad=np.radians(max_dist_arcsec/3600)
+    except:
+        print("Error creating MPC file.")
     #index the mpc file, since it's smaller. But, as always convert
     #to radians first.
 
