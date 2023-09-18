@@ -55,9 +55,9 @@ tracklet_num=0
 if compare_to_mpc =='y':
     print("Comparing detections to MPC submissions.")
     #remove this file just in case it still exists due to a previous crash
-    os.popen('rm -f temp_mpc.txt')
+    os.system('rm -f temp_mpc.txt')
     grep_str='\''+night[:4]+' '+night[4:6]+' '+night[6:8]+'\''
-    os.popen('grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
+    os.system('grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
     print('query: grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
     try:
         mpc=mpc_reader("temp_mpc.txt")
