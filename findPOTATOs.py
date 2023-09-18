@@ -55,7 +55,7 @@ tracklet_num=0
 if compare_to_mpc =='y':
     print("Comparing detections to MPC submissions.")
     #remove this file just in case it still exists due to a previous crash
-    os.popen('rm temp_mpc.txt')
+    os.popen('rm -f temp_mpc.txt')
     grep_str='\''+night[:4]+' '+night[4:6]+' '+night[6:8]+'\''
     os.popen('grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
     print('query: grep '+grep_str+' '+mpc_file+' > temp_mpc.txt')
@@ -487,6 +487,6 @@ for m in np.arange(len(image_triplets_list)):
 
 
 if compare_to_mpc == 'y':
-    os.popen('rm temp_mpc.txt')
+    os.popen('rm -f temp_mpc.txt')
     mpc.dropna(inplace=True)
     mpc.to_csv('mpc_comparison'+night+'.csv')
