@@ -32,7 +32,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
         trackletFound: string, equals 'yes' if passed
         res: associated residual with found tracklet 
     """
-    trackletFound='no'
+    trackletFound='n'
     elements_path="~/.find_orb/elements.txt" #for mac 
     if os.path.exists(os.path.expanduser(elements_path)):
         os.remove(os.path.expanduser(elements_path))
@@ -91,7 +91,7 @@ def find_orb(maxResidual, nullResid = True, MOIDLim = False):
                         print("MOID:",MOID," exceeds MOIDLim:", MOIDLIM)
                         break
         if  resCheck:
-            trackletFound='yes'
+            trackletFound='y'
     #    else:
     #        print("Residuals,",res," exceed maxResidual:", maxResidual)
     #        return False
