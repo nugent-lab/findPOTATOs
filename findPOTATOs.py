@@ -40,7 +40,7 @@ timing_uncertainty= 5 #seconds
 max_mag_variance= 3 #the maximum amount brightness can vary across a tracklet, in mag
 # will pick the biggest of these to determine radius of which to search
 Maximum_residual = .9 #arcseconds #This is the maximum residual allowed after orbfit fit
-astrometric_accuracy=2 #arcseconds
+astrometric_accuracy=1.5 #arcseconds
 findorb_check='n' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
 
@@ -340,7 +340,6 @@ for m in np.arange(len(image_triplets_list)):
     if len(complete_tracklets) == 0:
         print("No tracklets found.")
         continue #skip to next frame triplet
-    print("converting to df5")
 
     # # Tracklet screening
     # A slow moving tracklet has a relatively large search radious for
@@ -355,6 +354,7 @@ for m in np.arange(len(image_triplets_list)):
     for i in range(len(complete_tracklets)):
         mag_min=np.min([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
         mag_max=np.max([complete_tracklets.mag_a[i],complete_tracklets.mag_b[i],complete_tracklets.mag_c[i]])
+        
         
         if (mag_max-mag_min) <max_mag_variance:    
             coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
@@ -374,6 +374,7 @@ for m in np.arange(len(image_triplets_list)):
                 angle_array.append(angle)
                 mag_array.append(mag_max-mag_min)
                 mag_min_array.append(mag_max)# because the "minimum" mag you want is the faintest one
+
         else:
             complete_tracklets.drop(index=[i],inplace=True)
 
@@ -392,12 +393,16 @@ for m in np.arange(len(image_triplets_list)):
     for i in range(len(complete_tracklets)):
         tracklet_id='cn'+str(tracklet_num).rjust(5,'0')
         tracklet_num += 1
-
+        
+        #ratio of velocity between points a-b and points b-c
+        ab_bc_vratio=(complete_tracklets.ab_dist[i]/(b_time-a_time))/(complete_tracklets.bc_dist[i]/(c_time-b_time))
 
         coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
         coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
         coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-        
+        sky_sep = coordA.separation(coordC)
+        sky_sep_arcs=sky_sep.arcsecond
+
         formatted_data = "     "
         formatted_data += "{}".format(tracklet_id)+'  C'
         formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
@@ -443,12 +448,12 @@ for m in np.arange(len(image_triplets_list)):
             
                 if exists(tracklet_features):
                     with open(tracklet_features, 'a', encoding="utf-8") as f:
-                        f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+'\n')
+                        f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+','+str(sky_sep_arcs)+','+str(ab_bc_vratio)+'\n')
                         f.close
                 else:
                     with open(tracklet_features, 'x', encoding="utf-8") as f:
-                        f.write("tracklet_id,angle_deg,mag_diff,mag_min,residual\n")
-                        f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+'\n')
+                        f.write("tracklet_id,angle_deg,mag_diff,mag_min,residual,sky_sep,ab_bc_vratio\n")
+                        f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+','+str(sky_sep_arcs)+','+str(ab_bc_vratio)+'\n')
                         f.close   
                 if print_thumbs == 'y':
                     #print("Saving thumbnails for tracklet:"tracklet_id)
@@ -480,12 +485,12 @@ for m in np.arange(len(image_triplets_list)):
 
             if exists(tracklet_features):
                 with open(tracklet_features, 'a', encoding="utf-8") as f:
-                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+'\n')
+                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(sky_sep_arcs)+','+str(ab_bc_vratio)+'\n')
                     f.close
             else:
                 with open(tracklet_features, 'x', encoding="utf-8") as f:
-                    f.write("tracklet_id,angle_deg,mag_diff,mag_min\n")
-                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+'\n')
+                    f.write("tracklet_id,angle_deg,mag_diff,mag_min,sky_sep,ab_bc_vratio\n")
+                    f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(sky_sep_arcs)+','+str(ab_bc_vratio)+'\n')
                     f.close     
 
     #save stats
