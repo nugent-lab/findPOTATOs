@@ -10,6 +10,12 @@ from datetime import datetime
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, Distance
 from sklearn.neighbors import BallTree
+# for plotting
+import matplotlib.pyplot as plt
+
+#import matplotlib
+
+#matplotlib.use('Agg') #trying to solve memory leakin figure creation on mac machines
 
 
 
@@ -237,3 +243,34 @@ def mpc_reader(file_name):
     d={'tracklet_id':track_id, 'date_mjd':date, 'RA':ra, 'Dec':dec, 'mag':mag}
     dat=pd.DataFrame(data=d)
     return dat
+    
+    
+def save_thumbnails(fits_frame, tracklet_id,abc,x_pos, y_pos,telescope_image):
+    """
+    Saves thumbnails.
+    Args:
+        fits_frame: string, name of image
+        tracklet_id: string, unique id of tracklet
+        abc: string, 'a', 'b', 'c' to indicate order of source in tracklet
+        x_pos: float, RA of source you want thumbnail of 
+        y_pos: float, Dec of source you want thumbnail of 
+        telescope_image: array, actual image
+    Returns:
+        none
+    """
+    buffer = 20
+    image_name=fits_frame.split('.')
+    if y_pos < 0:
+        y_pos=buffer
+    if x_pos < 0:
+        x_pos=buffer
+
+    fig, ax = plt.subplots()
+    m, s = np.mean(telescope_image), np.std(telescope_image)
+    plt.xlim([int(x_pos)-(buffer), int(x_pos)+(buffer)])
+    plt.ylim([int(y_pos)-(buffer), int(y_pos)+(buffer)])
+    plt.axis('off')
+    im = ax.imshow(telescope_image, interpolation='nearest', cmap='gray', vmin=m-s, vmax=m+s, origin='lower')
+    plt.savefig("thumbs/thumb_"+image_name[0]+'_'+tracklet_id+'_'+abc+".png", format="png")
+    plt.close('all')
+    return  

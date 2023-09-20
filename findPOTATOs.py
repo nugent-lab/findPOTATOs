@@ -10,6 +10,7 @@ from os.path import exists
 from astropy.coordinates import SkyCoord, Angle, Distance
 from linking_library import *
 import sys  
+import fitsio # if you want thumbnails of sources
 
 #  C.R. Nugent and N. Tan
 #  August 2023
@@ -24,6 +25,9 @@ mpc_file='../mpc/AllObs644.txt' #only need this if above is yes. Needs to be 80-
 #include the submissions from the observatory you are interested in.
 max_dist_arcsec = 2 # only if comparing to MPC. max distance between things you want paired, in arcseconds
 
+print_thumbs='y'# turn this on (='y')if you want to save thumbnails of the detections
+# in all tracklets.
+fits_path= '../tricam/data/p20011120/obsdata/' #location of the fits files  
 
 #input_directory='sources/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
@@ -33,11 +37,11 @@ max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcsec
 # angle between a-b-c is variable min_tracklet_angle (degrees)
 min_tracklet_angle= 135 #degrees
 timing_uncertainty= 5 #seconds
-max_mag_variance= 2 #the maximum amount brightness can vary across a tracklet, in mag
+max_mag_variance= 3 #the maximum amount brightness can vary across a tracklet, in mag
 # will pick the biggest of these to determine radius of which to search
-Maximum_residual = .7 #arcseconds #This is the maximum residual allowed after orbfit fit
-astrometric_accuracy=1 #arcseconds
-findorb_check='y' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
+Maximum_residual = .9 #arcseconds #This is the maximum residual allowed after orbfit fit
+astrometric_accuracy=2 #arcseconds
+findorb_check='n' # if =='y', check tracklets using Bill Gray's Find Orb for accuracy. 
 exposure_correction=10 #seconds. This code takes input as time at beginning of exposure.
 
 # The MPC wants the time of the midpoint of exposure. Exposure times are 20 seconds, so 
@@ -53,7 +57,7 @@ image_triplets_list=pd.read_csv(input_filename)
 tracklet_num=0
 
 if compare_to_mpc =='y':
-    print("Comparing detections to MPC submissions.")
+    print("Comparing detections to MPC submissions. This works best if you run a whole night at once.")
     #remove this file just in case it still exists due to a previous crash
     os.system('rm -f temp_mpc.txt')
     grep_str='\''+night[:4]+' '+night[4:6]+' '+night[6:8]+'\''
@@ -129,6 +133,30 @@ for m in np.arange(len(image_triplets_list)):
     c['ra_rad'] = np.radians(c['RA'])
     c['dec_rad'] = np.radians(c['Dec'])
 
+    if print_thumbs == 'y':
+        if not os.path.exists('thumbs/'):
+            try:
+                os.system('mkdir thumbs')
+            except:
+                print("Could not make thumbnail directory.")
+        fits_frame_a=order_frames.names[0].split('s')
+        fits_frame_a=fits_frame_a[2]
+        fits_frame_a=fits_frame_a[:-1]+'fit.fz'
+        
+        fits_frame_b=order_frames.names[1].split('s')
+        fits_frame_b=fits_frame_b[2]
+        fits_frame_b=fits_frame_b[:-1]+'fit.fz'
+
+        fits_frame_c=order_frames.names[2].split('s')
+        fits_frame_c=fits_frame_c[2]
+        fits_frame_c=fits_frame_c[:-1]+'fit.fz'
+        print("images",fits_frame_a,fits_frame_b,fits_frame_c)
+
+        telescope_image_a = fitsio.read(fits_path+fits_frame_a)
+        telescope_image_b = fitsio.read(fits_path+fits_frame_b)
+        telescope_image_c = fitsio.read(fits_path+fits_frame_c)
+        
+
     if compare_to_mpc == 'y':
         # report any detections that are in MPC file but NOT in your files for 
         # given time 
@@ -175,6 +203,10 @@ for m in np.arange(len(image_triplets_list)):
     dec_b=[]
     ra_a=[]
     ra_b=[]
+    x_a=[]
+    x_b=[]
+    y_a=[]
+    y_b=[]
     mag_a=[]
     mag_b=[]
     observatory_code=[]
@@ -193,6 +225,10 @@ for m in np.arange(len(image_triplets_list)):
                 dec_b.append(b_moving['Dec'][i])
                 ra_a.append(a_moving['RA'][indicies_b[i][j]])
                 ra_b.append(b_moving['RA'][i])
+                x_a.append(a_moving['xcentroid'][indicies_b[i][j]])
+                x_b.append(b_moving['xcentroid'][i])
+                y_a.append(a_moving['ycentroid'][indicies_b[i][j]])
+                y_b.append(b_moving['ycentroid'][i])
                 mag_a.append(a_moving['magnitude'][indicies_b[i][j]])
                 mag_b.append(b_moving['magnitude'][i])
                 observatory_code.append(b_moving['observatory_code'][i])
@@ -210,6 +246,10 @@ for m in np.arange(len(image_triplets_list)):
     candidate_tracklet['dec_b']=dec_b
     candidate_tracklet['ra_a']=ra_a
     candidate_tracklet['ra_b']=ra_b
+    candidate_tracklet['x_a']=x_a
+    candidate_tracklet['y_a']=y_a
+    candidate_tracklet['x_b']=x_b
+    candidate_tracklet['y_b']=y_b
     candidate_tracklet['mag_a']=mag_a
     candidate_tracklet['mag_b']=mag_b
     candidate_tracklet['observatory_code']=observatory_code
@@ -235,13 +275,11 @@ for m in np.arange(len(image_triplets_list)):
     if len(candidate_tracklet) == 0:
         print("No pairs found.")
         continue #skip to next frame triplet
-
     # this next part is the distance between point a, and second point
     # that is projected at ra_a, dec_b
     # not precisely correct, but close enough
     delta_dec=np.radians(candidate_tracklet['dec_b']-candidate_tracklet['dec_a'])
     candidate_tracklet['delta_dec']=delta_dec
-
 
     #predict where object will be in frame c
     # you'll be searching around this point
@@ -264,6 +302,8 @@ for m in np.arange(len(image_triplets_list)):
     point_c=[]
     dec_c=[]
     ra_c=[]
+    x_c=[]
+    y_c=[]
     mag_c=[]
     bc_dist=[]
 
@@ -281,22 +321,26 @@ for m in np.arange(len(image_triplets_list)):
                 point_c.append(indicies_c[i][j])
                 dec_c.append(c_moving['Dec'][indicies_c[i][j]])
                 ra_c.append(c_moving['RA'][indicies_c[i][j]])
+                x_c.append(c_moving['xcentroid'][indicies_c[i][j]])
+                y_c.append(c_moving['ycentroid'][indicies_c[i][j]])
                 mag_c.append(c_moving['magnitude'][indicies_c[i][j]])
                 bc_dist.append(distances_c[i][j])
         else:
             "No length 3 tracklets found in these frames."
-
     # Reassemble that dataframe 
-    complete_tracklets=df = pd.DataFrame(new_tracklets, columns = ['index','point_a','point_b','ab_dist','dec_a','dec_b','ra_a','ra_b','mag_a','mag_b','observatory_code','band','pred_dist','r_due_to_angle','delta_dec'])
+    complete_tracklets= pd.DataFrame(new_tracklets, columns = ['index','point_a','point_b','ab_dist','dec_a','dec_b','ra_a','ra_b','x_a','y_a','x_b','y_b','mag_a','mag_b','observatory_code','band','pred_dist','r_due_to_angle','delta_dec'])
     complete_tracklets['point_c']=point_c
     complete_tracklets['dec_c']=dec_c
     complete_tracklets['ra_c']=ra_c
+    complete_tracklets['x_c']=x_c
+    complete_tracklets['y_c']=y_c
     complete_tracklets['mag_c']=mag_c
     complete_tracklets['bc_dist']=bc_dist 
 
     if len(complete_tracklets) == 0:
         print("No tracklets found.")
         continue #skip to next frame triplet
+    print("converting to df5")
 
     # # Tracklet screening
     # A slow moving tracklet has a relatively large search radious for
@@ -342,49 +386,46 @@ for m in np.arange(len(image_triplets_list)):
     print("Initial tracklet screening of",len(complete_tracklets),"complete.")
     sys.stdout.flush() #print out everything before running FindOrb
     # now filter based on findorb
-
     tracklet_features="tracklet_features"+night+'.txt'
     trackletfilename="tracklets_"+night+'.txt'
-    if findorb_check == 'y':
-        for i in range(len(complete_tracklets)):
+
+    for i in range(len(complete_tracklets)):
+        tracklet_id='cn'+str(tracklet_num).rjust(5,'0')
+        tracklet_num += 1
+
+
+        coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+        coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+        coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
+        
+        formatted_data = "     "
+        formatted_data += "{}".format(tracklet_id)+'  C'
+        formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
+        formatted_data += "{:1}".format(decimal_time_a[1][:5])+' '
+        formatted_data += coordA.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+        formatted_data += "{:.1f}".format(complete_tracklets.mag_a[i])+'   '
+        formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+        
+        formatted_data += "     "
+        formatted_data += "{}".format(tracklet_id)+'  C'
+        formatted_data += "{}".format(b_time.strftime('%Y %m %d'))+'.'
+        formatted_data += "{:1}".format(decimal_time_b[1][:5])+' '
+        formatted_data += coordB.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+        formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
+        formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+        
+        formatted_data += "     " 
+        formatted_data += "{}".format(tracklet_id)+'  C'
+        formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
+        formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
+        formatted_data += coordC.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
+        formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
+        formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
+        #print(formatted_data)
+        
+        if findorb_check == 'y':
             findOrbTxt = open("/projectnb/ct-ast/findPOTATOs/fo.txt","w")
-            #findOrbTxt = open(os.path.expanduser("~/.find_orb/fo.txt"),"w")
-
-            tracklet_id='cn'+str(tracklet_num).rjust(5,'0')
-            tracklet_num += 1
-
-
-            coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-            coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-            coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-
-            formatted_data = "     "
-            formatted_data += "{}".format(tracklet_id)+'  C'
-            formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
-            formatted_data += "{:1}".format(decimal_time_a[1][:5])+' '
-            formatted_data += coordA.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-            formatted_data += "{:.1f}".format(complete_tracklets.mag_a[i])+'   '
-            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-            
-            formatted_data += "     "
-            formatted_data += "{}".format(tracklet_id)+'  C'
-            formatted_data += "{}".format(b_time.strftime('%Y %m %d'))+'.'
-            formatted_data += "{:1}".format(decimal_time_b[1][:5])+' '
-            formatted_data += coordB.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-            formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
-            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-            
-            formatted_data += "     " 
-            formatted_data += "{}".format(tracklet_id)+'  C'
-            formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
-            formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
-            formatted_data += coordC.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-            formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
-            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-
-            #print(formatted_data)
             findOrbTxt.writelines(formatted_data)
-
             findOrbTxt.close()
             
             trackletFound, res = find_orb(Maximum_residual, nullResid = True, MOIDLim = True)
@@ -408,45 +449,25 @@ for m in np.arange(len(image_triplets_list)):
                     with open(tracklet_features, 'x', encoding="utf-8") as f:
                         f.write("tracklet_id,angle_deg,mag_diff,mag_min,residual\n")
                         f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+','+str(res)+'\n')
-                        f.close            
-            
+                        f.close   
+                if print_thumbs == 'y':
+                    #print("Saving thumbnails for tracklet:"tracklet_id)
+                    save_thumbnails(fits_frame_a, tracklet_id,'a',complete_tracklets.x_a[i],complete_tracklets.y_a[i],telescope_image_a)
+                    save_thumbnails(fits_frame_b, tracklet_id,'b',complete_tracklets.x_b[i],complete_tracklets.y_b[i],telescope_image_b)
+                    save_thumbnails(fits_frame_c, tracklet_id,'c',complete_tracklets.x_c[i],complete_tracklets.y_c[i],telescope_image_c)
+         
             else: #drop it
                 print("tracklet rejected")
                 complete_tracklets.drop(index=[i],inplace=True)
-    else:
-        for i in range(len(complete_tracklets)):
-            tracklet_id='cn'+str(i).rjust(5,'0')
-            decimal_time_a=str(a_time).split('.')
-            decimal_time_b=str(b_time).split('.')
-            decimal_time_c=str(c_time).split('.')
+        
+        else: #if you aren't using findorb
+        
+            if print_thumbs == 'y':
+                #print("Saving thumbnails for tracklet:"tracklet_id)
+                save_thumbnails(fits_frame_a, tracklet_id,'a',complete_tracklets.x_a[i],complete_tracklets.y_a[i],telescope_image_a)
+                save_thumbnails(fits_frame_b, tracklet_id,'b',complete_tracklets.x_b[i],complete_tracklets.y_b[i],telescope_image_b)
+                save_thumbnails(fits_frame_c, tracklet_id,'c',complete_tracklets.x_c[i],complete_tracklets.y_c[i],telescope_image_c)
 
-            coordA = SkyCoord(ra=complete_tracklets.ra_a[i],dec= complete_tracklets.dec_a[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-            coordB = SkyCoord(ra=complete_tracklets.ra_b[i],dec= complete_tracklets.dec_b[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-            coordC = SkyCoord(ra=complete_tracklets.ra_c[i],dec= complete_tracklets.dec_c[i],unit=(u.deg, u.deg), distance=70*u.kpc)
-
-            formatted_data = "     "
-            formatted_data += "{}".format(tracklet_id)+'  C'
-            formatted_data += "{}".format(a_time.strftime('%Y %m %d'))+'.'
-            formatted_data += "{:1}".format(decimal_time_a[1][:5])+' '
-            formatted_data += coordA.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-            formatted_data += "{:.1f}".format(complete_tracklets.mag_a[i])+'   '
-            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-            
-            formatted_data += "     "
-            formatted_data += "{}".format(tracklet_id)+'  C'
-            formatted_data += "{}".format(b_time.strftime('%Y %m %d'))+'.'
-            formatted_data += "{:1}".format(decimal_time_b[1][:5])+' '
-            formatted_data += coordB.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-            formatted_data += "{:.1f}".format(complete_tracklets.mag_b[i])+'   '
-            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
-            
-            formatted_data += "     " 
-            formatted_data += "{}".format(tracklet_id)+'  C'
-            formatted_data += "{}".format(c_time.strftime('%Y %m %d'))+'.'
-            formatted_data += "{:1}".format(decimal_time_c[1][:5])+' '
-            formatted_data += coordC.to_string(style='hmsdms',pad=True,sep=' ',precision=2)+'         '
-            formatted_data += "{:.1f}".format(complete_tracklets.mag_c[i])+'   '
-            formatted_data += complete_tracklets.band[i]+'    '+str(complete_tracklets.observatory_code[i])+'\n'
 
             if exists(trackletfilename):
                 with open(trackletfilename, 'a', encoding="utf-8") as f:
@@ -465,7 +486,6 @@ for m in np.arange(len(image_triplets_list)):
                 with open(tracklet_features, 'x', encoding="utf-8") as f:
                     f.write("tracklet_id,angle_deg,mag_diff,mag_min\n")
                     f.write(tracklet_id+','+str(complete_tracklets.angle[i].value)+','+str(complete_tracklets.mag_diff[i])+','+str(complete_tracklets.mag_min[i])+'\n')
-                     
                     f.close     
 
     #save stats
