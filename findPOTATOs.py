@@ -27,7 +27,7 @@ max_dist_arcsec = 2 # only if comparing to MPC. max distance between things you 
 
 print_thumbs='y'# turn this on (='y')if you want to save thumbnails of the detections
 # in all tracklets.
-fits_path= '../tricam/data/p20011120/obsdata/' #location of the fits files  
+fits_path= '../tricam/data/p20011120/obsdata/processed/' #location of the fits files  
 
 #input_directory='sources/'
 max_speed = 0.05 #maximum speed an asteroid can travel to be detected, in arcseconds/second
@@ -57,6 +57,8 @@ image_triplets_list=pd.read_csv(input_filename)
 tracklet_num=0
 
 if compare_to_mpc =='y':
+    # This is checking for detections present in MPC but NOT in our source lists
+    # This is needed so we can assess accuracy of this algorithm.
     print("Comparing detections to MPC submissions. This works best if you run a whole night at once.")
     #remove this file just in case it still exists due to a previous crash
     os.system('rm -f temp_mpc.txt')
@@ -68,13 +70,14 @@ if compare_to_mpc =='y':
         mpc['ra_rad']  = np.radians(mpc['RA'])
         mpc['dec_rad'] = np.radians(mpc['Dec'])
         mpc['detected']=1 #1 if only in mpc, if we find it in our files we'll change this to 'NaN' later and then drop the nans.
-        tree = BallTree(mpc[['ra_rad', 'dec_rad']], metric='haversine')
+        mpc_tree = BallTree(mpc[['ra_rad', 'dec_rad']], metric='haversine')
+        print("mpc cols",mpc[['ra_rad', 'dec_rad']])
         max_dist_rad=np.radians(max_dist_arcsec/3600)
+        print("max_dist_rad",max_dist_rad)
     except:
         print("Error creating MPC file.")
     #index the mpc file, since it's smaller. But, as always convert
     #to radians first.
-
 
 for m in np.arange(len(image_triplets_list)):
     file_a='o_sources'+image_triplets_list.filea[m]+'.csv'
@@ -139,6 +142,9 @@ for m in np.arange(len(image_triplets_list)):
                 os.system('mkdir thumbs')
             except:
                 print("Could not make thumbnail directory.")
+
+        # derive filenames of original fits files
+        # then load images with fitsio 
         fits_frame_a=order_frames.names[0].split('s')
         fits_frame_a=fits_frame_a[2]
         fits_frame_a=fits_frame_a[:-1]+'fit.fz'
@@ -160,18 +166,29 @@ for m in np.arange(len(image_triplets_list)):
     if compare_to_mpc == 'y':
         # report any detections that are in MPC file but NOT in your files for 
         # given time 
-        indicies, distances = tree.query_radius(a[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=True)
+        indicies = mpc_tree.query_radius(a[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=False)
+        print("a cols",a[['ra_rad', 'dec_rad']])
+        print("compare mpc a", len(indicies))
         for i in range(len(indicies)):
+            #print("compare mpc aa", len(indicies[i]))
             for j in range(len(indicies[i])):
                 mpc.loc['detected',indicies[i][j]]='NaN'
-        indicies, distances = tree.query_radius(b[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=True)
+                print("detection found in a")
+        indicies = mpc_tree.query_radius(b[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=False)
+        print("compare mpc b", len(indicies))
         for i in range(len(indicies)):
+            #print("compare mpc bb", len(indicies[i]))
             for j in range(len(indicies[i])):
                 mpc.loc['detected',indicies[i][j]]='NaN'
-        indicies, distances = tree.query_radius(c[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=True)
+                print("detection found in b")
+        indicies = mpc_tree.query_radius(c[['ra_rad', 'dec_rad']], r=max_dist_rad, return_distance=False)
+        print("compare mpc c", len(indicies))
         for i in range(len(indicies)):
+            #print("compare mpc cc", len(indicies[i]))
             for j in range(len(indicies[i])):
                 mpc.loc['detected',indicies[i][j]]='NaN'
+                print("detection found in c")
+
 
 
     a_moving, b_moving, c_moving=remove_stationary_sources(a, b, c, astrometric_accuracy) #threshold of 2 arsec is rougly our accuracy near the edges
@@ -513,6 +530,6 @@ for m in np.arange(len(image_triplets_list)):
 
 
 if compare_to_mpc == 'y':
-    os.popen('rm -f temp_mpc.txt')
+    os.system('rm -f temp_mpc.txt')
     mpc.dropna(inplace=True)
-    mpc.to_csv('mpc_comparison'+night+'.csv')
+    mpc.to_csv('mpc_comparison'+night+'.csv', chunksize=10,lineterminator='\n',encoding='utf-8',mode='w')
