@@ -3,3 +3,5 @@ __pycache__/
 /sources
 /thumbs
 /outputs
+outputs/AllPotentialTracklets.txt
+helpers/

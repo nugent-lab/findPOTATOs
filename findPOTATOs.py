@@ -812,8 +812,7 @@ if compare_to_mpc == "y":
     # these parameter funcitons are needed so that supercomputer doesn't get grouchy:
     mpc.to_csv(
         "outputs/mpc_comparison" + night + ".csv",
-        chunksize=10,
-        lineterminator="\n",
+        chunksize=10, lineterminator='\n',
         encoding="utf-8",
         mode="w",
     )
