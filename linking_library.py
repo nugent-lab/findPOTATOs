@@ -4,16 +4,14 @@ import re  # regular expressions, used to search for mean residuals in Find_orb 
 from time import sleep
 import pandas as pd
 import numpy as np
+import matplotlib as plt
 
 # from datetime import datetime
 import astropy.units as u
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, Angle, Distance
 from sklearn.neighbors import BallTree
-import matplotlib.pyplot as plt
-
-# matplotlib.use('Agg') #trying to solve memory leakin figure creation on mac machines
-
+from PIL import Image
 
 def find_orb(maxResidual, nullResid=True, MOIDLim=False):
     """
@@ -255,7 +253,7 @@ def mpc_reader(file_name):
 
 def save_thumbnails(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_image):
     """
-    Saves thumbnails.
+    Saves thumbnails in human-readable format.
     Args:
         fits_frame: string, name of image
         tracklet_id: string, unique id of tracklet
@@ -278,6 +276,8 @@ def save_thumbnails(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_image)
     plt.xlim([int(x_pos) - (buffer), int(x_pos) + (buffer)])
     plt.ylim([int(y_pos) - (buffer), int(y_pos) + (buffer)])
     plt.axis("off")
+    plt.margins(0, 0)
+    plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
     im = ax.imshow(
         telescope_image,
         interpolation="nearest",
@@ -291,4 +291,41 @@ def save_thumbnails(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_image)
         format="png",
     )
     plt.close("all")
+    return
+
+def save_thumbnails_ml(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_image):
+    """
+    Saves thumbnails for machine learning. Thumbs 
+    are very small and scaled from 0 to 255.
+    Args:
+        fits_frame: string, name of image
+        tracklet_id: string, unique id of tracklet
+        abc: string, 'a', 'b', 'c' to indicate order of source in tracklet
+        x_pos: float, RA of source you want thumbnail of
+        y_pos: float, Dec of source you want thumbnail of
+        telescope_image: array, actual image
+    Returns:
+        none
+    """
+    buffer = 9
+    image_name = fits_frame.split(".")
+    left = int(x_pos) - (buffer-1)
+    right = int(x_pos) + (buffer)
+    upper = int(y_pos) + (buffer-1)
+    lower = int(y_pos) - (buffer)
+
+    if left < 0:
+        left=0
+    elif upper < 0:
+        upper=0
+    elif right > telescope_image.shape[1]:
+        right = telescope_image.shape[1]
+    elif lower >= telescope_image.shape[0]:
+        lower = telescope_image.shape[0]
+
+    # Crop the image and scale it to use all values.
+    cropped_array = telescope_image[lower:upper, left:right]
+    scaled_array = ((cropped_array - np.min(cropped_array)) / (np.max(cropped_array) - np.min(cropped_array)) * 255).astype(np.uint8)
+    cropped_image = Image.fromarray(scaled_array, mode="L")
+    cropped_image.save("thumbs/mlthumb_" + image_name[0] + "_" + tracklet_id + "_" + abc + ".png")
     return

@@ -655,7 +655,7 @@ for m in np.arange(len(image_triplets_list)):
             # print("results of find_orb:",trackletFound,res)
 
         if (findorb_check == "y" and trackletFound == "y") or findorb_check == "n":
-            print("confirmed tracklet!", formatted_data)
+            print("confirmed tracklet!\n", formatted_data)
             if exists(trackletfilename):
                 with open(trackletfilename, "a", encoding="utf-8") as f:
                     f.write(formatted_data)
@@ -708,7 +708,7 @@ for m in np.arange(len(image_triplets_list)):
                     f.close
             if print_thumbs == "y":
                 # print("Saving thumbnails for tracklet:"tracklet_id)
-                save_thumbnails(
+                save_thumbnails_ml(
                     fits_frame_a,
                     tracklet_id,
                     "a",
@@ -716,7 +716,7 @@ for m in np.arange(len(image_triplets_list)):
                     complete_tracklets.y_a[i],
                     telescope_image_a,
                 )
-                save_thumbnails(
+                save_thumbnails_ml(
                     fits_frame_b,
                     tracklet_id,
                     "b",
@@ -724,7 +724,7 @@ for m in np.arange(len(image_triplets_list)):
                     complete_tracklets.y_b[i],
                     telescope_image_b,
                 )
-                save_thumbnails(
+                save_thumbnails_ml(
                     fits_frame_c,
                     tracklet_id,
                     "c",
