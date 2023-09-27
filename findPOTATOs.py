@@ -817,7 +817,7 @@ if compare_to_mpc == "y":
     mpc.to_csv(
         "outputs/mpc_comparison" + night + ".csv",
         chunksize=10,
-        lineterminator="\n",
+        lineterminator='\n',
         encoding="utf-8",
         mode="w",
     )
