@@ -734,7 +734,7 @@ for m in np.arange(len(image_triplets_list)):
                 )
 
             if export_ades == "y":
-                # update keys in obsData dictionary for all three points 
+                # update keys in obsData dictionary for all three points
                 # Coordinate A
                 ades_obs_dict["trkSub"] = tracklet_id
                 ades_obs_dict["obsTime"] = str(a_time.isot) + "Z"
@@ -752,20 +752,24 @@ for m in np.arange(len(image_triplets_list)):
                     XMLElement, ades, obsData = update_xml(
                         XMLElement, ades, obsData, ades_obs_dict
                     )
-                
+
                 # Coordinate B
                 ades_obs_dict["obsTime"] = str(b_time.isot) + "Z"
                 ades_obs_dict["ra"] = coordB.ra.deg
                 ades_obs_dict["dec"] = coordB.dec.deg
                 ades_obs_dict["mag"] = "{:.1f}".format(complete_tracklets.mag_b[i])
-                XMLElement, ades, obsData = update_xml(XMLElement, ades, obsData, ades_obs_dict)
+                XMLElement, ades, obsData = update_xml(
+                    XMLElement, ades, obsData, ades_obs_dict
+                )
 
                 # Coordinate C
                 ades_obs_dict["obsTime"] = str(c_time.isot) + "Z"
                 ades_obs_dict["ra"] = coordC.ra.deg
                 ades_obs_dict["dec"] = coordC.dec.deg
                 ades_obs_dict["mag"] = "{:.1f}".format(complete_tracklets.mag_c[i])
-                XMLElement, ades, obsData = update_xml(XMLElement, ades, obsData, ades_obs_dict)
+                XMLElement, ades, obsData = update_xml(
+                    XMLElement, ades, obsData, ades_obs_dict
+                )
 
         if findorb_check == "y" and trackletFound == "n":  # drop it
             print("tracklet rejected")
@@ -780,12 +784,12 @@ for m in np.arange(len(image_triplets_list)):
     num_tracklets_prescreen = str(len(complete_tracklets))
 
     if not exists(outputname):
-        f=open(outputname, "x", encoding="utf-8")
+        f = open(outputname, "x", encoding="utf-8")
         f.write(
             "filea,fileb,filec,date_corrected,time_corrected,run_time_s,num_sources,num_tracklets_prescreen\n"
         )
     else:
-        f=open(outputname, "a", encoding="utf-8")
+        f = open(outputname, "a", encoding="utf-8")
     f.write(
         file_a
         + ","
@@ -812,7 +816,8 @@ if compare_to_mpc == "y":
     # these parameter funcitons are needed so that supercomputer doesn't get grouchy:
     mpc.to_csv(
         "outputs/mpc_comparison" + night + ".csv",
-        chunksize=10, lineterminator='\n',
+        chunksize=10,
+        lineterminator="\n",
         encoding="utf-8",
         mode="w",
     )
