@@ -325,7 +325,10 @@ def save_thumbnails_ml(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_ima
 
     # Crop the image and scale it to use all values.
     cropped_array = telescope_image[lower:upper, left:right]
-    scaled_array = ((cropped_array - np.min(cropped_array)) / (np.max(cropped_array) - np.min(cropped_array)) * 255).astype(np.uint8)
-    cropped_image = Image.fromarray(scaled_array, mode="L")
-    cropped_image.save("thumbs/mlthumb_" + image_name[0] + "_" + tracklet_id + "_" + abc + ".png")
+    try:
+        scaled_array = ((cropped_array - np.min(cropped_array)) / (np.max(cropped_array) - np.min(cropped_array)) * 255).astype(np.uint8)
+        cropped_image = Image.fromarray(scaled_array, mode="L")
+        cropped_image.save("thumbs/mlthumb_" + image_name[0] + "_" + tracklet_id + "_" + abc + ".png")
+    except ValueError:
+        print("Error rescaling, here's the cropped_array",cropped_array)
     return
