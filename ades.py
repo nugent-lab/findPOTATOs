@@ -42,11 +42,15 @@ def generate_xml(filename, data, obs_data):
 
     observers = XMLElement.SubElement( obsContext, "observers")
     observers_name = XMLElement.SubElement( observers, "name")
-    observers_name.text = data["observers"]
+    observers_name.text = data["observers1"]
+    observers_name = XMLElement.SubElement( observers, "name")
+    observers_name.text = data["observers2"]
 
     coinvestigators = XMLElement.SubElement( obsContext, "coinvestigators")
     coinvestigators_name = XMLElement.SubElement( coinvestigators, "name")
-    coinvestigators_name.text = data["coinvestigators"]
+    coinvestigators_name.text = data["coinvestigators1"]
+    coinvestigators_name = XMLElement.SubElement( coinvestigators, "name")
+    coinvestigators_name.text = data["coinvestigators2"]
 
     measurers = XMLElement.SubElement( obsContext, "measurers")
     measurers_name = XMLElement.SubElement( measurers, "name")

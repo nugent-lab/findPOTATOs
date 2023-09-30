@@ -30,7 +30,8 @@ print_thumbs = (
     "y"  # turn this on (='y') if you want to save thumbnails of the detections
 )
 # in all tracklets.
-fits_path = "../tricam/data/p20011120/obsdata/processed/"  # location of the fits files
+fits_path_1 = "../tricam/data/p" # location of fits files
+fits_path_2="/obsdata/processed/"  # the night is sandwitched between these two
 
 export_ades = (
     "y"  # turn this on (='y') if you want observations exported in XML ADES format
@@ -68,10 +69,12 @@ exposure_correction = (
 ades_dict = {
     "mpcCode": "644",  # MPC-assigned observatory code
     "observatoryName": "Palomar Mountain/NEAT",
-    "submitter": "Carrie Nugent",
-    "observers": "NEAT",
-    "measurers": "Carrie Nugent",
-    "coinvestigators": "J. (Gerbs) Bauer, Yaeji Kim",
+    "submitter": "C. Nugent",
+    "observers1": "K. Lawrence",
+    "observers2": "E. Helin",
+    "measurers": "C. Nugent",
+    "coinvestigators1": "J. (G.) Bauer",
+    "coinvestigators2": "Y. Kim",
     "telescope_design": "reflector",
     "telescope_aperture": "1.1",
     "telescope_detector": "CCD",
@@ -133,6 +136,7 @@ input_filename = sys.argv[1]
 get_night_id = input_filename.split(".")
 get_night_id = get_night_id[0].split("_")
 night = get_night_id[2]
+fits_path=fits_path_1+night+fits_path_2
 image_triplets_list = pd.read_csv(input_filename)
 tracklet_num = 0
 
@@ -817,7 +821,7 @@ if compare_to_mpc == "y":
     mpc.to_csv(
         "outputs/mpc_comparison" + night + ".csv",
         chunksize=10,
-        lineterminator='\n',
+        #lineterminator='\n',
         encoding="utf-8",
         mode="w",
     )
