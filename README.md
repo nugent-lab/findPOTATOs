@@ -64,7 +64,7 @@ This code was designed to link tracklets as part of Carrie Nugent's [NEAT Reproc
 
 If you use this software, or adapt it for your own purposes, please cite the following two papers
 
-1. Nugent et al., in prep, FINDPOTATOs: Open source asteroid linking software accelerated by binary trees
+1. Tan and Nugent et al., in prep, FINDPOTATOs: Open source asteroid linking software accelerated by binary trees
 
 2. [N. Tan's Wellesley Honors Thesis](https://repository.wellesley.edu/object/ir1199).
 
