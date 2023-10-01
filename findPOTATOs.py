@@ -20,12 +20,6 @@ import fitsio  # if you want thumbnails of sources
 # input filename provided at call
 input_directory = "../NEAT_reprocessing/output/"
 
-compare_to_mpc = "y"  # turn this on (='y')if you want to compare output to
-# existing MPC submissions in 80-char format.
-mpc_file = "../mpc/AllObs644.txt"  # only need this if above is yes. Needs to be 80-char format and only
-# include the submissions from the observatory you are interested in.
-max_dist_arcsec = 3  # only if comparing to MPC. max distance between things you want paired, in arcseconds
-
 print_thumbs = (
     "y"  # turn this on (='y') if you want to save thumbnails of the detections
 )
@@ -140,32 +134,7 @@ fits_path=fits_path_1+night+fits_path_2
 image_triplets_list = pd.read_csv(input_filename)
 tracklet_num = 0
 
-if compare_to_mpc == "y":
-    # This is checking for detections present in MPC but NOT in our source lists
-    # This is needed so we can assess accuracy of this algorithm.
-    print(
-        "Comparing detections to MPC submissions. This works best if you run a whole night at once."
-    )
-    # remove this file just in case it still exists due to a previous crash
-    os.system("rm -f temp_mpc.txt")
-    grep_str = "'" + night[:4] + " " + night[4:6] + " " + night[6:8] + "'"
-    os.system("grep " + grep_str + " " + mpc_file + " > temp_mpc.txt")
-    print("query: grep " + grep_str + " " + mpc_file + " > temp_mpc.txt")
-    try:
-        mpc = mpc_reader("temp_mpc.txt")
-        mpc["ra_rad"] = np.radians(mpc["RA"])
-        mpc["dec_rad"] = np.radians(mpc["Dec"])
-        mpc[
-            "detected"
-        ] = 1  # 1 if only in mpc, if we find it in our files we'll change this to 'NaN' later and then drop the nans.
-        mpc_tree = BallTree(mpc[["ra_rad", "dec_rad"]], metric="haversine")
-        print("mpc cols", mpc[["ra_rad", "dec_rad"]])
-        max_dist_rad = np.radians(max_dist_arcsec / 3600)
-        print("max_dist_rad", max_dist_rad)
-    except:
-        print("Error creating MPC file.")
-    # index the mpc file, since it's smaller. But, as always convert
-    # to radians first.
+
 
 if export_ades == "y":
     xml_filename = "outputs/tracklets_ADES_" + night + ".xml"
@@ -256,33 +225,7 @@ for m in np.arange(len(image_triplets_list)):
         telescope_image_b = fitsio.read(fits_path + fits_frame_b)
         telescope_image_c = fitsio.read(fits_path + fits_frame_c)
 
-    if compare_to_mpc == "y":
-        # report any detections that are in MPC file but NOT in your files for
-        # given time
-        indicies = mpc_tree.query_radius(
-            a[["ra_rad", "dec_rad"]], r=max_dist_rad, return_distance=False
-        )
-        for i in range(len(indicies)):
-            # print("compare mpc aa", len(indicies[i]))
-            for j in range(len(indicies[i])):
-                mpc.loc["detected", indicies[i][j]] = "NaN"
-                print("detection found in a")
-        indicies = mpc_tree.query_radius(
-            b[["ra_rad", "dec_rad"]], r=max_dist_rad, return_distance=False
-        )
-        for i in range(len(indicies)):
-            # print("compare mpc bb", len(indicies[i]))
-            for j in range(len(indicies[i])):
-                mpc.loc["detected", indicies[i][j]] = "NaN"
-                print("detection found in b")
-        indicies = mpc_tree.query_radius(
-            c[["ra_rad", "dec_rad"]], r=max_dist_rad, return_distance=False
-        )
-        for i in range(len(indicies)):
-            # print("compare mpc cc", len(indicies[i]))
-            for j in range(len(indicies[i])):
-                mpc.loc["detected", indicies[i][j]] = "NaN"
-                print("detection found in c")
+
 
     a_moving, b_moving, c_moving = remove_stationary_sources(
         a, b, c, astrometric_accuracy
@@ -659,7 +602,7 @@ for m in np.arange(len(image_triplets_list)):
             # print("results of find_orb:",trackletFound,res)
 
         if (findorb_check == "y" and trackletFound == "y") or findorb_check == "n":
-            print("confirmed tracklet!\n", formatted_data)
+            print("Candidate tracklet found!\n", formatted_data)
             if exists(trackletfilename):
                 with open(trackletfilename, "a", encoding="utf-8") as f:
                     f.write(formatted_data)
@@ -813,18 +756,6 @@ for m in np.arange(len(image_triplets_list)):
         + "\n"
     )
     f.close
-
-if compare_to_mpc == "y":
-    os.system("rm -f temp_mpc.txt")
-    mpc.dropna(inplace=True)
-    # these parameter funcitons are needed so that supercomputer doesn't get grouchy:
-    mpc.to_csv(
-        "outputs/mpc_comparison" + night + ".csv",
-        chunksize=10,
-        #lineterminator='\n',
-        encoding="utf-8",
-        mode="w",
-    )
 
 if export_ades == "y":
     # write the ADES xml to file

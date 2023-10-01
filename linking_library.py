@@ -13,6 +13,7 @@ from astropy.coordinates import SkyCoord, Angle, Distance
 from sklearn.neighbors import BallTree
 from PIL import Image
 
+
 def find_orb(maxResidual, nullResid=True, MOIDLim=False):
     """
     Feeds observations in MPC format that are located ~/.find_orb/fo.txt to
@@ -61,11 +62,8 @@ def find_orb(maxResidual, nullResid=True, MOIDLim=False):
         )
 
         # save all inputs to find_orb
-        # open("outputs/AllPotentialTracklets.txt", "a+").writelines([l for l in open(os.path.expanduser("~/.find_orb/fo.txt")).readlines()])
         open("outputs/AllPotentialTracklets.txt", "a+").writelines(
-            [
-                l
-                for l in open(
+            [l for l in open(
                     os.path.expanduser("/projectnb/ct-ast/findPOTATOs/fo.txt")
                 ).readlines()
             ]
@@ -101,9 +99,7 @@ def find_orb(maxResidual, nullResid=True, MOIDLim=False):
                         break
         if resCheck:
             trackletFound = "y"
-    #    else:
-    #        print("Residuals,",res," exceed maxResidual:", maxResidual)
-    #        return False
+
     else:
         print("Could not open file", os.path.expanduser(elements_path))
     return trackletFound, res
@@ -293,9 +289,10 @@ def save_thumbnails(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_image)
     plt.close("all")
     return
 
+
 def save_thumbnails_ml(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_image):
     """
-    Saves thumbnails for machine learning. Thumbs 
+    Saves thumbnails for machine learning. Thumbs
     are very small and scaled from 0 to 255.
     Args:
         fits_frame: string, name of image
@@ -309,15 +306,15 @@ def save_thumbnails_ml(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_ima
     """
     buffer = 9
     image_name = fits_frame.split(".")
-    left = int(x_pos) - (buffer-1)
+    left = int(x_pos) - (buffer - 1)
     right = int(x_pos) + (buffer)
-    upper = int(y_pos) + (buffer-1)
+    upper = int(y_pos) + (buffer - 1)
     lower = int(y_pos) - (buffer)
 
     if left < 0:
-        left=0
+        left = 0
     elif upper < 0:
-        upper=0
+        upper = 0
     elif right > telescope_image.shape[1]:
         right = telescope_image.shape[1]
     elif lower >= telescope_image.shape[0]:
@@ -326,9 +323,15 @@ def save_thumbnails_ml(fits_frame, tracklet_id, abc, x_pos, y_pos, telescope_ima
     # Crop the image and scale it to use all values.
     cropped_array = telescope_image[lower:upper, left:right]
     try:
-        scaled_array = ((cropped_array - np.min(cropped_array)) / (np.max(cropped_array) - np.min(cropped_array)) * 255).astype(np.uint8)
+        scaled_array = (
+            (cropped_array - np.min(cropped_array))
+            / (np.max(cropped_array) - np.min(cropped_array))
+            * 255
+        ).astype(np.uint8)
         cropped_image = Image.fromarray(scaled_array, mode="L")
-        cropped_image.save("thumbs/mlthumb_" + image_name[0] + "_" + tracklet_id + "_" + abc + ".png")
+        cropped_image.save(
+            "thumbs/mlthumb_" + image_name[0] + "_" + tracklet_id + "_" + abc + ".png"
+        )
     except ValueError:
-        print("Error rescaling, here's the cropped_array",cropped_array)
+        print("Error rescaling, here's the cropped_array", cropped_array)
     return

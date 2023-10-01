@@ -4,4 +4,4 @@ __pycache__/
 /thumbs
 /outputs
 outputs/AllPotentialTracklets.txt
-helpers/
+/triplets

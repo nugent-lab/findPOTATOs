@@ -1,16 +1,16 @@
-# Find POTATOs
+# FindPOTATOs (Beta Version)
 
 
 ## Summary
 This software links together minor planet detections to form a tracklet. Tracklets are required so that minor planet observations can be submitted to the [Minor Planet Center](https://minorplanetcenter.net). 
 
-This software is designed to be robust, and can accurately find near-Earth Objects (NEOS) as well as Trans-Neptunian Objects (TNOs). Written in Python, this software gets its incredible speed from the use of Ball Tree algorithms to efficiently  partition space and reduce searching time. 
+This software is designed to be robust, and can accurately find near-Earth Objects (NEOs) as well as Trans-Neptunian Objects (TNOs). Written in Python, this software gets its incredible speed from the use of Ball Tree algorithms. These structures efficiently partition space and reduce searching time during various steps through the algorithm. 
 
 The current version assembles length-three tracklets from three candidate detection sets, labeled A, B, and C. However, the code is intended to be flexible and customizable, and could be adapted to a range of cadences. If you adapt this code, please cite this work (see Section "How To Cite", below.)
 
 This builds upon substantial work by Nicole Tan (University of Canterbury), with further work by Prof. Carrie Nugent (Olin College). If you'd like more information on the original version of this code, see [N. Tan's Wellesley Honors Thesis](https://repository.wellesley.edu/object/ir1199).
 
-This software is currently under development and is being tested against the NEAT dataset. Use this beta version at your own risk.
+This software is currently under development and is being tested against the NEAT dataset. Use this *beta version* at your own risk.
 
 ## Setup
 
@@ -53,8 +53,6 @@ By default, the code will produce observations in MPC 80-char format.
 
 ## Settings
 This code was designed to link tracklets as part of Carrie Nugent's [NEAT Reprocessing](https://ui.adsabs.harvard.edu/abs/2022DPS....5450402N/abstract) work. The following settings may be useful.
-
-`compare_to_mpc` If enabled, this will compare your results to results previously submitted to the MPC. It only compares to 80-char format obs.
 
 `export_ades` If enabled, it will also export your results in ADES 2017 format. Also see our [Unofficial ADES repository](https://github.com/nugent-lab/unofficial_ADES) for stand-alone code to help with this task.
 
