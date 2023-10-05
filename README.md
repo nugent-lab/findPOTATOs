@@ -27,8 +27,7 @@ source venv/bin/activate
 ```
 pip install -r requirements.txt
 ```
-4. (Recommended) To be most effective, this code relies on findorb to screen the found tracklets. To install findorb on your machine, follow the instructions here: https://projectpluto.com/install.htm 
-
+4. (Recommended) To be most effective, this code relies on Find_Orb to screen the found tracklets. To install Find_Orb on your machine, follow the instructions here: https://projectpluto.com/install.htm 
 
 5. Modify settings, which are found at the beginning of findPotatos.py. This code has several options, choose what is right to you. (See Settings section, below.)
 
@@ -44,7 +43,6 @@ pip install -r requirements.txt
 
 It also seeks an `image_triplets.csv` file. Each row of this file should be the names of the `.csv` detection files that will be searched for a length three tracklet, seperated by commas. These detection files need to be of the same region of the sky. They do not need to be listed in this file in the order they will taken, FINDPOTATOs will sort that out for you based on the `mjd` values.
 
-
 6. Run using
 ``` 
 python3 findPOTATOS.py
@@ -59,14 +57,15 @@ This code was designed to link tracklets as part of Carrie Nugent's [NEAT Reproc
 `print_thumbs` If enabled, this will print thumbnails of the sources in your resulting tracklets. It's always a good idea to check your sources by eye, to ensure you are submitting high-quality astrometry to the MPC. This does, however, slow down the code a bit. If you have independently validated your sources via another method, you can turn this off.
 
 
-
 ## How to Cite
 
-If you use this software, or adapt it for your own purposes, please cite the following two papers
+If you use this software, or adapt it for your own purposes, please cite the following papers:
 
 1. Tan and Nugent et al., in prep, FINDPOTATOs: Open source asteroid linking software accelerated by binary trees
 
 2. [N. Tan's Wellesley Honors Thesis](https://repository.wellesley.edu/object/ir1199).
+
+3. If you use the Find_Orb-enabled screening, please cite [Bill Gray's work](https://projectpluto.com/find_orb.htm).
 
 ## License 
 
