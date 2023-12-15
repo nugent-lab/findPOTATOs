@@ -18,7 +18,7 @@ This software is currently under development and is being tested against the NEA
 2. (Recommended) Setup and activate a virtual environment:
 
 ```
-python -m vevn venv
+python -m venv venv
 source venv/bin/activate
 ```
 
